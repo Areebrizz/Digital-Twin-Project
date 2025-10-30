@@ -7,8 +7,9 @@ import streamlit.components.v1 as components
 import random
 
 # --- CONFIGURATION: Full Screen, No Scroll ---
+# Layout set to wide, padding minimized via CSS
 st.set_page_config(
-    page_title="Erasmus Meta 4.0 Digital Twin Command Center",
+    page_title="META 4.0 Digital Twin Command Center",
     page_icon="⚙️",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -41,6 +42,7 @@ def generate_simulation_data():
     mileage_start = 0
     
     for i in range(100): 
+        # Simulating realistic wear/drift
         pressure_start -= random.uniform(0.1, 0.3)
         temp_start += random.uniform(-1, 3)
         mileage_start += random.uniform(300, 800)
@@ -52,43 +54,46 @@ def generate_simulation_data():
 
 df_sim = generate_simulation_data()
 
-# --- 2. LIGHT THEME UI: Professional and High-Contrast ---
+# --- 2. LIGHT THEME UI: Professional and High-Contrast (Sleek CSS) ---
 st.markdown("""
 <style>
-/* 1. BASE THEME: Bright White/Light Gray Background */
+/* 1. BASE THEME: Light Gray Background, Compact Text */
 .main {
     background-color: #F8F8F8; 
     color: #111111; 
     padding-top: 0.5rem;
 }
 
-/* 2. HEADER & TITLE: Deep Blue Accent */
-h1, h2, h3 {
+/* 2. HEADER & TITLE: Deep Blue Accent for professionalism */
+h1 {
     color: #000080; 
-    font-family: 'Segoe UI', sans-serif;
+    font-weight: 900;
+    margin-bottom: 0px;
+    padding-bottom: 0px;
+}
+h3 {
+    color: #000080; 
     font-weight: 700;
     border-bottom: 2px solid #ADD8E6; 
-    padding-bottom: 5px;
+    padding-bottom: 3px;
     margin-bottom: 0.5rem;
+    font-size: 1.2em; /* Smaller for compactness */
 }
-/* Reduce padding for H4 in ROI box to compact it */
-.stMarkdown h4 {
+h4 { /* For the ROI box */
     margin: 0;
 }
 
-
-/* 3. CONTAINERS & METRICS: Clean White Boxes with Blue Border */
+/* 3. CONTAINERS & METRICS: Clean, sharp boxes */
 .stMetric {
     background-color: #FFFFFF;
-    padding: 12px;
-    border-radius: 10px;
+    padding: 8px; /* Reduced padding for compactness */
+    border-radius: 8px;
     border: 1px solid #000080; 
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
-    margin-bottom: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); 
+    margin-bottom: 5px;
 }
-
 .stMetric > div:nth-child(1) > div:nth-child(1) {
-    font-size: 1.8em;
+    font-size: 1.6em; /* Slightly smaller metric value */
     color: #000080; 
     font-weight: 700;
 }
@@ -97,37 +102,8 @@ h1, h2, h3 {
 .stSlider {
     margin-bottom: 5px;
 }
-div[role="slider"] {
-    background-color: #E0E0E0; 
-    border-radius: 8px;
-    border: 1px solid #000080;
-}
-.stSlider > div > div > div:nth-child(2) { 
-    background-color: #000080; 
-}
 
-/* 5. COMPACT ALERTS */
-.stAlert {
-    padding: 10px;
-    margin-bottom: 8px;
-    border-radius: 8px;
-    font-size: 0.9em;
-    color: #111111; 
-}
-.stSuccess {  
-    background: #E6F7E6 !important; 
-    border-left: 4px solid #3CB371 !important; 
-}
-.stWarning { 
-    background: #FFFBE6 !important; 
-    border-left: 4px solid #FFA500 !important; 
-}
-.stError { 
-    background: #FFEBE6 !important; 
-    border-left: 4px solid #FF4500 !important; 
-}
-
-/* 6. ELIMINATE ALL WHITESPACE (Critical for No-Scroll) */
+/* 6. ELIMINATE ALL WHITESPACE (CRITICAL FOR NO-SCROLL) */
 div.block-container {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
@@ -137,22 +113,22 @@ div.block-container {
 
 /* 7. COMPACT COLUMNS AND LAYOUT */
 [data-testid="column"] {
-    padding: 0.5rem;
+    padding: 0.4rem; /* Reduced column padding */
 }
 
 /* 8. CUSTOM COMPONENTS */
 .digital-twin-container {
     border: 2px solid #000080; 
-    border-radius: 12px;
+    border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 128, 0.2);
     overflow: hidden;
-    margin-bottom: 8px;
+    margin-bottom: 5px;
 }
 
 .cyber-divider {
     height: 2px;
     background: linear-gradient(90deg, transparent, #ADD8E6, transparent);
-    margin: 5px 0;
+    margin: 3px 0; /* Reduced margin */
 }
 
 /* 9. STATUS INDICATORS */
@@ -166,6 +142,16 @@ div.block-container {
 .status-normal { background: #3CB371; color: white; }
 .status-warning { background: #FFA500; color: white; }
 .status-critical { background: #FF4500; color: white; }
+
+/* 10. INTRO BOX STYLE */
+.intro-box {
+    font-size: 0.9em;
+    padding: 8px;
+    border: 1px solid #000080;
+    border-radius: 5px;
+    background-color: #E6F7FF; /* Very light blue background */
+    margin-bottom: 5px;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -176,15 +162,14 @@ with header_col1:
     st.markdown("# 🚀 META 4.0 DIGITAL TWIN COMMAND CENTER")
     st.markdown("### Prescriptive Maintenance Intelligence Platform")
     
-# --- NEW: INTRO / CONTEXT SECTION ---
+# --- INTRO / CONTEXT SECTION (Sleek, direct, non-bolded text) ---
 st.markdown("""
-<p style='font-size: 1.1em; margin-bottom: 10px; border: 1px dashed #ADD8E6; padding: 10px; border-radius: 5px;'>
+<div class='intro-box'>
     **Problem:** Asset failures lead to unplanned downtime and high maintenance costs. 
     **Solution:** This platform utilizes a **Digital Twin** fed by **Real-Time Telemetry** to predict component wear, enabling **Prescriptive Maintenance** before failure occurs.
-</p>
+</div>
 """, unsafe_allow_html=True)
 st.markdown('<div class="cyber-divider"></div>', unsafe_allow_html=True)
-
 
 # Get current status
 sim_mileage = 20000
@@ -192,7 +177,8 @@ sim_pressure = 31.5
 sim_temp = 55.0
 
 # Main Dashboard Grid - Single View, No Scroll
-main_col1, main_col2, main_col3, main_col4 = st.columns([2.5, 1.5, 2, 1.5])
+# Adjusted columns for better balance
+main_col1, main_col2, main_col3, main_col4 = st.columns([2.5, 1.3, 2.0, 1.5]) 
 
 # --- COLUMN 4: I/O SIMULATOR (COMPACT CONTROLS) ---
 with main_col4:
@@ -239,7 +225,6 @@ with main_col1:
         </model-viewer>
     </div>
     """
-    # NOTE: components.html is essential here for rendering the 3D model
     components.html(html_code, height=300)
     
     # Status indicator below twin
@@ -330,7 +315,7 @@ trend_col1, trend_col2 = st.columns([4, 1])
 with trend_col1:
     st.markdown("### ASSET HEALTH TREND ANALYSIS")
     
-    # FIX: Stable Plotly Dual-Axis Setup
+    # Plotly Dual-Axis Setup
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     
     # Trace 1: Pressure (Primary Y-axis)
@@ -363,36 +348,26 @@ with trend_col1:
     
     # Apply general layout settings
     fig.update_layout(
-        height=250, 
-        margin=dict(l=20, r=50, t=30, b=20),
+        height=250, # Reduced height for compactness
+        margin=dict(l=20, r=50, t=20, b=20), # Reduced margins
         plot_bgcolor='#FFFFFF',
         paper_bgcolor='#F8F8F8',
         font_color='#111111',
         showlegend=True,
         legend=dict(
-            orientation="h",
-            yanchor="bottom", y=1.02, xanchor="right", x=1
+            orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1
         ),
         xaxis=dict(gridcolor='#E0E0E0', title="Mileage (km)"),
     )
     
-    # Apply primary axis settings using update_yaxes
+    # Apply y-axis settings
     fig.update_yaxes(
-        title_text="Pressure (PSI)", 
-        title_font=dict(color="#000080"), 
-        tickfont=dict(color="#000080"), 
-        gridcolor='#E0E0E0',
-        secondary_y=False 
+        title_text="Pressure (PSI)", title_font=dict(color="#000080"), tickfont=dict(color="#000080"), 
+        gridcolor='#E0E0E0', secondary_y=False 
     )
-    
-    # Apply secondary axis settings using update_yaxes
     fig.update_yaxes(
-        title_text="Temperature (°C)", 
-        title_font=dict(color="#800080"), 
-        tickfont=dict(color="#800080"),
-        gridcolor='#E0E0E0',
-        showgrid=False,
-        secondary_y=True 
+        title_text="Temperature (°C)", title_font=dict(color="#800080"), tickfont=dict(color="#800080"),
+        gridcolor='#E0E0E0', showgrid=False, secondary_y=True 
     )
     
     st.plotly_chart(fig, use_container_width=True)
