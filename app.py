@@ -39,7 +39,7 @@ st.markdown("""
 -   **Machine Learning:** `Scikit-learn` (Random Forest Classifier) to predict multi-class failure modes.
 -   **Dashboard:** `Streamlit` for the interactive web UI.
 -   **Visualizations:** `Plotly` for interactive 2D charts.
--   **3D Model:** `streamlit-3d-viewer` to render a live 3D model of the tire.
+-   **3D Model:** `st-web-component` to render a live 3D model using the web-standard `<model-viewer>`.
 -   **Deployment:** `Streamlit Cloud` integrated directly with this `GitHub` repository.
 """)
 
