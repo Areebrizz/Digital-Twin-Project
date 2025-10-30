@@ -206,7 +206,7 @@ with main_col1:
     twin_glow = glow_colors.get(status_color, "rgba(0, 0, 128, 0.6)")
     
     # --- FIX 1: Using a known stable 3D tire model URL ---
-    model_path = "https://modelviewer.dev/assets/tire.glb" 
+    model_path = "https://github.com/Areebrizz/Digital-Twin-Project/blob/main/offorad_vehicle_tires.glb" 
 
     html_code = f"""
     <div class="digital-twin-container" style="box-shadow: 0 0 10px 3px {twin_glow};">
