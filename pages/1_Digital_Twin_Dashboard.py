@@ -3,18 +3,17 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
-import streamlit.components.v1 as components # Native HTML embedding for 3D
+import streamlit.components.v1 as components
+import random
 
 # --- CONFIGURATION & FUTURISTIC CSS (Must be repeated for the page to inherit styling) ---
 st.set_page_config(
-    page_title="Digital Twin Dashboard",
+    page_title="Digital Twin Predictive Dashboard",
     page_icon="📈",
     layout="wide"
 )
 
-# Custom CSS for Futuristic Dark Theme (Must match app.py)
+# Custom CSS for Futuristic Dark Theme (Deep Charcoal Black and Cyan Glow)
 st.markdown("""
 <style>
 /* Base Dark Theme (Deep Charcoal Black) */
@@ -38,15 +37,6 @@ h1, h2, h3 {
     box-shadow: 0 4px 20px rgba(0, 255, 255, 0.3); 
     transition: all 0.3s;
 }
-
-/* Sidebar Customization */
-[data-testid="stSidebar"] {
-    background-color: #010409; 
-    color: #92e0ff;
-    border-right: 2px solid #00FFFF;
-}
-
-/* Dataframe Styling for Dark Mode */
 .stDataFrame {
     color: #f0f6fc;
     background-color: #161b22;
@@ -56,212 +46,169 @@ h1, h2, h3 {
 """, unsafe_allow_html=True)
 
 
-# --- 2. DATA GENERATION (Keep intact) ---
+# --- 2. PREDICTIVE LOGIC (Adapted from Colab) ---
+
+# Define the alert thresholds for the wear model
+WEAR_THRESHOLD_PRESSURE = 28.0 
+HIGH_MILEAGE_THRESHOLD = 40000.0
+CRITICAL_TEMP_THRESHOLD = 80.0
+
+def predict_wear_and_status(pressure, mileage, temp):
+    """
+    Predicts the tire status based on Colab's logic and returns a status string and color.
+    """
+    if pressure < WEAR_THRESHOLD_PRESSURE and mileage > 10000:
+        return "CRITICAL: PRESSURE & WEAR", "red"
+    elif pressure < WEAR_THRESHOLD_PRESSURE:
+        return "HIGH RISK: LOW PRESSURE", "orange"
+    elif mileage > HIGH_MILEAGE_THRESHOLD:
+        return "HIGH RISK: HIGH MILEAGE", "orange"
+    elif temp > CRITICAL_TEMP_THRESHOLD:
+        return "WARNING: HIGH TEMPERATURE", "yellow"
+    else:
+        return "NORMAL OPERATION", "green"
+
+# --- 3. DATA GENERATION (Used for Plotting Historical Trend) ---
 @st.cache_data
-def generate_data():
-    np.random.seed(42)
-    num_samples = 2000
+def generate_simulation_data():
+    data = []
+    pressure_start = 32
+    temp_start = 25
+    mileage_start = 0
     
-    mileage = np.random.uniform(5000, 80000, num_samples)
-    pressure = np.random.normal(32, 2, num_samples)
-    temperature = np.random.normal(50, 10, num_samples)
-    vibration = np.random.normal(15, 5, num_samples)
-    
-    failure_mode = np.array(['Normal'] * num_samples, dtype=object)
-    
-    # Rule-based failure injection
-    pressure_loss_indices = (pressure < 29) & (mileage > 30000)
-    failure_mode[pressure_loss_indices] = 'Pressure Loss'
-    temperature[pressure_loss_indices] *= 1.1 
-    vibration[pressure_loss_indices] *= 1.2
+    # Simulate a full lifetime of 100 cycles 
+    for i in range(100): 
+        pressure_start -= random.uniform(0.1, 0.3)
+        temp_start += random.uniform(-1, 3)
+        mileage_start += random.uniform(300, 800)
+        data.append((mileage_start, pressure_start, temp_start))
+        if pressure_start < WEAR_THRESHOLD_PRESSURE:
+             break # Simulation ends when tire fails
 
-    overheat_indices = (temperature > 75)
-    failure_mode[overheat_indices] = 'Overheat'
-    pressure[overheat_indices] *= 1.15
-    vibration[overheat_indices] *= 1.3
-
-    impact_indices = (vibration > 30) & (mileage > 40000)
-    failure_mode[impact_indices] = 'Impact/Fatigue'
-    temperature[impact_indices] *= 1.2
-
-    df = pd.DataFrame({
-        'Mileage (km)': mileage,
-        'Pressure (PSI)': pressure,
-        'Temperature (C)': temperature,
-        'Vibration (Hz)': vibration,
-        'Failure Mode': failure_mode
-    })
+    df = pd.DataFrame(data, columns=['Mileage (km)', 'Pressure (PSI)', 'Temperature (°C)'])
     return df
 
-# --- 3. MACHINE LEARNING MODEL (Keep intact) ---
-@st.cache_resource
-def train_model(df):
-    features = ['Mileage (km)', 'Pressure (PSI)', 'Temperature (C)', 'Vibration (Hz)']
-    target = 'Failure Mode'
-    
-    X = df[features]
-    y = df[target]
-    
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-    
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
-    model.fit(X_train, y_train)
-    
-    accuracy = model.score(X_test, y_test)
-    return model, accuracy
-
-# --- 4. LOAD DATA AND TRAIN MODEL ---
-df = generate_data()
-model, accuracy = train_model(df)
+df_sim = generate_simulation_data()
 
 
-# --- 5. STREAMLIT APP LAYOUT ---
+# --- 4. STREAMLIT APP LAYOUT ---
 
 st.title("Digital Twin Predictive Dashboard")
-st.markdown("### Real-Time Prescriptive Maintenance Console")
+st.markdown("### Real-Time Condition Monitoring & Failure Prediction")
 st.markdown("---")
 
 # --- SIDEBAR (Live Simulator) ---
 st.sidebar.header("ASSET SIMULATOR (IoT Data Feed)")
-st.sidebar.markdown("Manipulate the parameters to test the predictive boundaries of the ML model.")
+st.sidebar.markdown("Manipulate the parameters to test the predictive boundaries of the Digital Twin.")
 
 # Sliders for user input
-sim_mileage = st.sidebar.slider("Mileage (km)", 5000, 80000, 50000)
-sim_pressure = st.sidebar.slider("Pressure (PSI)", 20.0, 45.0, 32.0, 0.5)
-sim_temp = st.sidebar.slider("Temperature (C)", 20.0, 100.0, 50.0, 1.0)
-sim_vibration = st.sidebar.slider("Vibration (Hz)", 5.0, 50.0, 15.0, 0.5)
-
-# Package inputs for the model
-input_data = pd.DataFrame({
-    'Mileage (km': [sim_mileage],
-    'Pressure (PSI)': [sim_pressure],
-    'Temperature (C)': [sim_temp],
-    'Vibration (Hz)': [sim_vibration]
-})
+sim_mileage = st.sidebar.slider("Mileage (km)", 0, 50000, 20000)
+sim_pressure = st.sidebar.slider("Pressure (PSI)", 20.0, 45.0, 31.5, 0.1)
+sim_temp = st.sidebar.slider("Temperature (°C)", 20.0, 100.0, 55.0, 0.5)
 
 # --- PREDICTION ---
-prediction = model.predict(input_data)[0]
-probabilities = model.predict_proba(input_data)
-prob_df = pd.DataFrame(probabilities, columns=model.classes_).T
-prob_df.columns = ['Probability']
-prob_df = prob_df.sort_values(by='Probability', ascending=False)
+status_text, status_color = predict_wear_and_status(sim_pressure, sim_mileage, sim_temp)
+
 
 # --- DASHBOARD (Main Page) ---
-tab1, tab2, tab3 = st.tabs(["Real-Time Health", "Diagnostic Analysis", "3D Twin Visualization"])
+tab1, tab2 = st.tabs(["3D Digital Twin & Prescriptive Alert", "Long-Term Simulation & Diagnostics"])
 
-# --- TAB 1: ASSET HEALTH MONITOR ---
+# --- TAB 1: 3D DIGITAL TWIN & ALERT ---
 with tab1:
-    st.header("Asset Condition: Predictive Outcome")
-    
-    col1, col2 = st.columns([3, 2])
-    
-    with col1:
-        st.subheader("Current Operational Status")
-        
-        # Display the prediction with color and actionable instruction
-        if prediction == 'Normal':
-            st.success(f"✅ **STATUS: NORMAL OPERATION (NOMINAL)**")
-            st.markdown("<span style='color:#4CAF50; font-size:1.1em;'>**Prescription:** Continue optimal operation. System is stable.</span>", unsafe_allow_html=True)
-        elif prediction == 'Pressure Loss':
-            st.warning(f"⚠️ **STATUS: INITIATING PRESSURE LOSS EVENT**")
-            st.markdown("<span style='color:#FFA500; font-size:1.1em;'>**Prescription:** Immediate pressure check and inspection for slow leaks. **Alert Level 2.**</span>", unsafe_allow_html=True)
-        elif prediction == 'Overheat':
-            st.error(f"🔥 **STATUS: CRITICAL OVERHEAT FAULT**")
-            st.markdown("<span style='color:#FF0000; font-size:1.1em; font-weight:bold;'>**Prescription:** Emergency shutdown protocol. High risk of structural failure. **CRITICAL ALERT.**</span>", unsafe_allow_html=True)
-        elif prediction == 'Impact/Fatigue':
-            st.warning(f"💥 **STATUS: STRUCTURAL FATIGUE DETECTED**")
-            st.markdown("<span style='color:#00FFFF; font-size:1.1em;'>**Prescription:** Schedule tire inspection and re-balancing to prevent further damage. **Alert Level 2.**</span>", unsafe_allow_html=True)
-
-    with col2:
-        st.subheader("ML Confidence Score")
-        st.caption(f"Model Accuracy on Test Data: **{accuracy:.2%}**")
-        st.dataframe(prob_df.style.format("{:.1%}").background_gradient(cmap='viridis'), use_container_width=True)
-        
-    st.markdown("---")
-    st.subheader("Feature Space Mapping: Live Data Point Analysis")
-    st.markdown("Visualizing the live sensor reading (red star) against the historical failure clusters (Training Data).")
-    
-    # Plotly Chart
-    fig = px.scatter(df, x='Temperature (C)', y='Pressure (PSI)', color='Failure Mode',
-                     title="Key Feature Correlation Map (Temperature vs. Pressure)",
-                     color_discrete_map={
-                         'Normal': '#4CAF50', 
-                         'Pressure Loss': '#FFA500', 
-                         'Overheat': '#FF0000', 
-                         'Impact/Fatigue': '#00FFFF'
-                     })
-    # Add the simulated point
-    fig.add_trace(go.Scatter(x=[sim_temp], y=[sim_pressure], mode='markers',
-                             marker=dict(color='#FFD700', size=25, symbol='star', line=dict(width=3, color='black')),
-                             name='LIVE ASSET POINT'))
-                             
-    fig.update_layout(plot_bgcolor='#1e2329', paper_bgcolor='#161b22', font_color='#f0f6fc', title_font_color='#f0f6fc')
-    st.plotly_chart(fig, use_container_width=True)
-
-# --- TAB 2: DIAGNOSTIC ANALYSIS (Keep content structure) ---
-with tab2:
-    st.header("ML Model & Data Diagnostics")
-    
-    st.subheader("Failure Mode Encyclopedia")
-    st.markdown("""
-    The model classifies asset state into four classes, enabling targeted maintenance:
-    * **Normal:** Optimal operating zone.
-    * **Pressure Loss:** Signifies gradual leak or sustained under-inflation.
-    * **Overheat:** Signifies excessive load or speed leading to material breakdown.
-    * **Impact/Fatigue:** Signifies structural damage from external impact or excessive wear.
-    """)
-    
-    st.markdown("---")
-    st.subheader("Historical Failure Distribution (3D Feature Visualization)")
-    fig2 = px.scatter_3d(df.sample(1000), x='Mileage (km)', y='Vibration (Hz)', z='Temperature (C)',
-                        color='Failure Mode', title="3D Feature Space: Historical Failure Clustering")
-    
-    fig2.update_layout(scene=dict(bgcolor='#1e2329'), paper_bgcolor='#161b22', font_color='#f0f6fc', title_font_color='#f0f6fc')
-    st.plotly_chart(fig2, use_container_width=True)
-
-# --- TAB 3: 3D TWIN VIEW (Native HTML Fix) ---
-with tab3:
-    st.header("Asset 3D Twin Visualization: The Virtual Reality")
-    st.markdown("The 3D model is the visual anchor of the Digital Twin, reflecting the predictive state in real-time.")
     
     col_3d, col_status = st.columns([2, 1])
     
     with col_3d:
-        st.subheader(f"Virtual Twin State: {prediction}")
+        st.subheader(f"Interactive 3D Twin: Current State [{status_text}]")
+        st.caption("This visualization reflects the health status determined by the predictive model.")
         
-        # Public GLTF model from modelviewer.dev - REPLACE WITH YOUR OWN MODEL URL LATER
-        model_path = "https://modelviewer.dev/shared-assets/models/gltf/RobotExpressive.glb" 
+        # Determine the color and intensity for the 3D model based on status
+        # This color needs to be injected into the HTML tag
+        # Red/Orange/Yellow indicates danger, Green indicates safety
+        
+        if status_color == "green":
+            twin_color = "#4CAF50" # Green for Normal
+        elif status_color == "orange":
+            twin_color = "#FFD700" # Gold/Yellow-Orange for High Risk
+        elif status_color == "yellow":
+            twin_color = "#FFA500" # Orange for Warning
+        else: # Critical
+            twin_color = "#FF0000" # Red for Critical
 
-        # The HTML component uses the <model-viewer> web standard for 3D rendering
+        # IMPORTANT: This is the native HTML 3D viewer for high compatibility.
+        # Ensure 'offorad_vehicle_tires.glb' is in your repository root.
+        model_path = "https://cdn.jsdelivr.net/gh/google/model-viewer/examples/assets/RobotExpressive.glb" # Placeholder link
+        
+        # To use your uploaded GLB, you need to commit it to your GitHub repo
+        # and reference it directly, e.g., model_path = "https://raw.githubusercontent.com/YOUR_USER/YOUR_REPO/main/offorad_vehicle_tires.glb"
+
         html_code = f"""
         <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
-        
         <model-viewer 
-            src="{model_path}"
-            alt="The Digital Twin Asset"
+            src="{model_path}" 
+            alt="Digital Twin Tire Model"
             auto-rotate 
             camera-controls 
             ar
-            style="width: 100%; height: 500px; border-radius: 15px; background-color: #0d1117; box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);"
+            style="width: 100%; height: 550px; border-radius: 15px; background-color: #0d1117; 
+                   box-shadow: 0 0 35px 5px {twin_color};" 
             shadow-intensity="1"
             >
         </model-viewer>
         """
-        
-        # Embed the component using the native Streamlit HTML function
-        components.html(html_code, height=500)
-
+        components.html(html_code, height=550)
 
     with col_status:
-        st.subheader("Live Operational Metrics")
+        st.subheader("Prescriptive Alert Console")
         
-        # Summary Status
-        status_color = {'Normal': 'green', 'Pressure Loss': 'orange', 'Impact/Fatigue': 'yellow', 'Overheat': 'red'}.get(prediction, 'white')
-        st.markdown(f"<p style='font-size: 1.5em; font-weight: bold; color: {status_color}; border-bottom: 3px solid {status_color}; padding-bottom: 5px;'>PREDICTED STATE: {prediction.upper()}</p>", unsafe_allow_html=True)
-            
+        # Display the prediction with high visual impact
+        if status_color == "green":
+            st.success(f"## ✅ {status_text}", icon="✅")
+            st.info("The Digital Twin predicts optimal operating conditions. Maintain current schedule.")
+        elif status_color in ["orange", "yellow"]:
+            st.warning(f"## ⚠️ {status_text}", icon="⚠️")
+            st.error("Proactive Maintenance Required: Schedule inspection within the next 48 hours to prevent failure.")
+        else:
+            st.error(f"## 🚨 {status_text}", icon="🚨")
+            st.info("CRITICAL ACTION: Stop asset immediately. Impending failure detected. Requires immediate replacement.")
+
         st.markdown("---")
-        st.subheader("Current IoT Readings")
-        # Use st.metric for consistent styling
-        st.metric("Pressure (PSI)", f"{sim_pressure}", delta="Optimal: 32.0", delta_color="off")
-        st.metric("Temperature (°C)", f"{sim_temp}", delta="Max Safe: 70.0", delta_color="off")
-        st.metric("Vibration (Hz)", f"{sim_vibration}", delta="Max Safe: 25.0", delta_color="off")
+        st.subheader("Current IoT Telemetry")
+        st.metric("Pressure", f"{sim_pressure} PSI", delta=f"{WEAR_THRESHOLD_PRESSURE} PSI Threshold")
+        st.metric("Mileage", f"{sim_mileage} km", delta=f"{HIGH_MILEAGE_THRESHOLD} km Threshold")
+        st.metric("Temperature", f"{sim_temp} °C", delta=f"{CRITICAL_TEMP_THRESHOLD} °C Warning")
+
+
+# --- TAB 2: SIMULATION & DIAGNOSTICS ---
+with tab2:
+    st.header("Long-Term Performance Diagnostics")
+    
+    st.markdown("### Simulated Tire Lifetime Analysis")
+    st.caption("This plot shows the simulated life of the tire based on historical data, with the wear threshold clearly marked.")
+    
+    # Plotly for professional-looking graph
+    fig_sim = go.Figure()
+    fig_sim.add_trace(go.Scatter(x=df_sim['Mileage (km)'], y=df_sim['Pressure (PSI)'], name='Pressure (PSI)', line=dict(color='cyan')))
+    fig_sim.add_trace(go.Scatter(x=df_sim['Mileage (km)'], y=df_sim['Temperature (°C)'], name='Temperature (°C)', line=dict(color='yellow')))
+    
+    # Add Alert Threshold Line
+    fig_sim.add_hline(y=WEAR_THRESHOLD_PRESSURE, line_dash="dash", line_color="red", annotation_text="CRITICAL PRESSURE THRESHOLD", annotation_position="top right")
+
+    fig_sim.update_layout(
+        title='Simulated Wear vs. Mileage',
+        xaxis_title='Mileage (km)',
+        yaxis_title='Value',
+        plot_bgcolor='#1e2329', 
+        paper_bgcolor='#0d1117', 
+        font_color='#f0f6fc',
+        template="plotly_dark" # Use Plotly's dark theme
+    )
+    st.plotly_chart(fig_sim, use_container_width=True)
+
+    st.markdown("---")
+    st.subheader("Key Diagnostic Takeaways")
+    col_diag1, col_diag2 = st.columns(2)
+    with col_diag1:
+        st.success("**Project Value:** Demonstrates the ability to shift maintenance from **Cost Center** to **Value Driver**.")
+    with col_diag2:
+        st.info("**Meta 4.0 Alignment:** High-fidelity Digital Twin, IoT Integration, and Prescriptive AI.")
