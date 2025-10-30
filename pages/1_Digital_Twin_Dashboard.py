@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-import plotly.graph_objects as go # Added for the scatter plot trace
+import plotly.graph_objects as go
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-from st_web_component import st_web_component # NEW 3D LIBRARY
+import streamlit.components.v1 as components # NEW: Import for native HTML embedding
 
 # --- 1. PAGE CONFIGURATION ---
 st.set_page_config(
@@ -182,7 +182,7 @@ with tab2:
                         color='Failure Mode', title="3D View of Historical Failures")
     st.plotly_chart(fig2, use_container_width=True)
 
-# --- TAB 3: 3D TWIN VIEW (FIXED) ---
+# --- TAB 3: 3D TWIN VIEW (RELIABLE FIX) ---
 with tab3:
     st.header("Live 3D Digital Twin Viewer")
     
@@ -191,12 +191,13 @@ with tab3:
     with col1:
         st.subheader(f"3D Model Status: {prediction}")
         
-        # Using a public GLTF model from modelviewer.dev for guaranteed deployment compatibility
+        # Public GLTF model from modelviewer.dev - REPLACE THIS with your own model path (e.g., 'https://github.com/.../tire.glb')
         model_path = "https://modelviewer.dev/shared-assets/models/gltf/RobotExpressive.glb" 
 
         # The HTML component uses the <model-viewer> web standard for 3D rendering
         html_code = f"""
         <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+        
         <model-viewer 
             src="{model_path}"
             alt="A 3D Model of the Digital Twin Tire"
@@ -209,13 +210,12 @@ with tab3:
         </model-viewer>
         """
         
-        # Embed the component
-        st_web_component(html_code, height=500, key="3d_viewer")
+        # Embed the component using the native Streamlit HTML function
+        components.html(html_code, height=500)
 
 
     with col2:
         st.subheader("Linked Data")
-        st.markdown("The 3D model is visually linked to the asset's current predicted status.")
         
         if prediction == 'Normal':
             st.success(f"**STATUS: {prediction}**")
