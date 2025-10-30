@@ -315,60 +315,77 @@ trend_col1, trend_col2 = st.columns([4, 1])
 with trend_col1:
     st.markdown("### ASSET HEALTH TREND ANALYSIS")
     
-    # Plotly Dual-Axis Setup
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    # Create a simple Plotly figure without complex nested parameters
+    fig = go.Figure()
     
-    # Trace 1: Pressure (Primary Y-axis)
+    # Add Pressure trace
     fig.add_trace(go.Scatter(
         x=df_sim['Mileage (km)'], 
         y=df_sim['Pressure (PSI)'], 
         name='Pressure (PSI)',
-        line=dict(color='#000080', width=3),
+        line=dict(color='#000080', width=2),
         fill='tozeroy',
         fillcolor='rgba(0, 0, 128, 0.1)'
-    ), secondary_y=False) 
+    ))
     
-    # Trace 2: Temperature (Secondary Y-axis)
+    # Add Temperature trace on secondary y-axis
     fig.add_trace(go.Scatter(
         x=df_sim['Mileage (km)'], 
         y=df_sim['Temperature (°C)'], 
         name='Temperature (°C)',
-        line=dict(color='#800080', width=3)
-    ), secondary_y=True) 
+        line=dict(color='#800080', width=2),
+        yaxis='y2'
+    ))
     
-    # Add horizontal critical line to the primary axis
+    # Add critical threshold line
     fig.add_hline(
         y=WEAR_THRESHOLD_PRESSURE, 
         line_dash="dash", 
         line_color="#FF4500",
         annotation_text="CRITICAL PRESSURE",
-        annotation_font_color="#FF4500",
-        secondary_y=False
+        annotation_font_color="#FF4500"
     )
     
-    # Apply general layout settings
+    # SIMPLIFIED LAYOUT - No nested dictionaries
     fig.update_layout(
-        height=250, # Reduced height for compactness
-        margin=dict(l=20, r=50, t=20, b=20), # Reduced margins
+        height=250,
+        margin=dict(l=50, r=50, t=30, b=50),
         plot_bgcolor='#FFFFFF',
         paper_bgcolor='#F8F8F8',
         font_color='#111111',
         showlegend=True,
-        legend=dict(
-            orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1
-        ),
-        xaxis=dict(gridcolor='#E0E0E0', title="Mileage (km)"),
+        xaxis_title="Mileage (km)",
+        yaxis_title="Pressure (PSI)"
     )
     
-    # Apply y-axis settings
+    # Update axes separately
+    fig.update_xaxes(gridcolor='#E0E0E0')
     fig.update_yaxes(
-        title_text="Pressure (PSI)", title_font=dict(color="#000080"), tickfont=dict(color="#000080"), 
-        gridcolor='#E0E0E0', secondary_y=False 
+        title_font=dict(color="#000080"), 
+        tickfont=dict(color="#000080"), 
+        gridcolor='#E0E0E0'
     )
-    fig.update_yaxes(
-        title_text="Temperature (°C)", title_font=dict(color="#800080"), tickfont=dict(color="#800080"),
-        gridcolor='#E0E0E0', showgrid=False, secondary_y=True 
+    
+    # Configure secondary y-axis
+    fig.update_layout(
+        yaxis2=dict(
+            title="Temperature (°C)",
+            titlefont=dict(color="#800080"),
+            tickfont=dict(color="#800080"),
+            overlaying='y',
+            side='right',
+            showgrid=False
+        )
     )
+    
+    # Update legend position
+    fig.update_layout(legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+    ))
     
     st.plotly_chart(fig, use_container_width=True)
 
