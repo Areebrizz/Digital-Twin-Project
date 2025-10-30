@@ -2,8 +2,10 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots # NEW: Required for stable dual-axis plot
 import streamlit.components.v1 as components
 import random
+# import os # Not needed if using the public GitHub URL for the model
 
 # --- CONFIGURATION: Full Screen, No Scroll ---
 st.set_page_config(
@@ -51,17 +53,112 @@ def generate_simulation_data():
 
 df_sim = generate_simulation_data()
 
-# --- 2. LIGHT THEME UI: Professional and High-Contrast (CSS omitted for brevity, assumed correct) ---
+# --- 2. LIGHT THEME UI: Professional and High-Contrast ---
 st.markdown("""
 <style>
-/* ... (Your existing CSS is assumed correct) ... */
-.main { background-color: #F8F8F8; color: #111111; padding-top: 0.5rem; }
-h1, h2, h3 { color: #000080; border-bottom: 2px solid #ADD8E6; }
-.stMetric { background-color: #FFFFFF; border: 1px solid #000080; }
-/* ... (rest of the CSS) ... */
-.digital-twin-container { border: 2px solid #000080; border-radius: 12px; box-shadow: 0 0 10px rgba(0, 0, 128, 0.2); overflow: hidden; margin-bottom: 8px; }
-.cyber-divider { height: 2px; background: linear-gradient(90deg, transparent, #ADD8E6, transparent); margin: 5px 0; }
-.status-indicator { padding: 4px 8px; border-radius: 4px; font-size: 0.9em; font-weight: bold; text-align: center; }
+/* 1. BASE THEME: Bright White/Light Gray Background */
+.main {
+    background-color: #F8F8F8; 
+    color: #111111; 
+    padding-top: 0.5rem;
+}
+
+/* 2. HEADER & TITLE: Deep Blue Accent */
+h1, h2, h3 {
+    color: #000080; 
+    font-family: 'Segoe UI', sans-serif;
+    font-weight: 700;
+    border-bottom: 2px solid #ADD8E6; 
+    padding-bottom: 5px;
+    margin-bottom: 0.5rem;
+}
+
+/* 3. CONTAINERS & METRICS: Clean White Boxes with Blue Border */
+.stMetric {
+    background-color: #FFFFFF;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #000080; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+    margin-bottom: 8px;
+}
+
+.stMetric > div:nth-child(1) > div:nth-child(1) {
+    font-size: 1.8em;
+    color: #000080; 
+    font-weight: 700;
+}
+
+/* 4. COMPACT WIDGETS */
+.stSlider {
+    margin-bottom: 5px;
+}
+div[role="slider"] {
+    background-color: #E0E0E0; 
+    border-radius: 8px;
+    border: 1px solid #000080;
+}
+.stSlider > div > div > div:nth-child(2) { 
+    background-color: #000080; 
+}
+
+/* 5. COMPACT ALERTS */
+.stAlert {
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    font-size: 0.9em;
+    color: #111111; 
+}
+.stSuccess {  
+    background: #E6F7E6 !important; 
+    border-left: 4px solid #3CB371 !important; 
+}
+.stWarning { 
+    background: #FFFBE6 !important; 
+    border-left: 4px solid #FFA500 !important; 
+}
+.stError { 
+    background: #FFEBE6 !important; 
+    border-left: 4px solid #FF4500 !important; 
+}
+
+/* 6. ELIMINATE ALL WHITESPACE */
+div.block-container {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+/* 7. COMPACT COLUMNS AND LAYOUT */
+[data-testid="column"] {
+    padding: 0.5rem;
+}
+
+/* 8. CUSTOM COMPONENTS */
+.digital-twin-container {
+    border: 2px solid #000080; 
+    border-radius: 12px;
+    box-shadow: 0 0 10px rgba(0, 0, 128, 0.2);
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.cyber-divider {
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #ADD8E6, transparent);
+    margin: 5px 0;
+}
+
+/* 9. STATUS INDICATORS */
+.status-indicator {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: bold;
+    text-align: center;
+}
 .status-normal { background: #3CB371; color: white; }
 .status-warning { background: #FFA500; color: white; }
 .status-critical { background: #FF4500; color: white; }
@@ -110,7 +207,7 @@ with main_col1:
     
     twin_glow = glow_colors.get(status_color, "rgba(0, 0, 128, 0.6)")
     
-    # Using the correct RAW GitHub URL for the model
+    # CORRECTED: Using the raw GitHub content URL for the GLB model
     model_path = "https://raw.githubusercontent.com/Areebrizz/Digital-Twin-Project/main/offorad_vehicle_tires.glb" 
 
     html_code = f"""
@@ -219,7 +316,8 @@ trend_col1, trend_col2 = st.columns([4, 1])
 with trend_col1:
     st.markdown("### ASSET HEALTH TREND ANALYSIS")
     
-    fig = go.Figure()
+    # FIX: Use make_subplots to explicitly set up the secondary axis and prevent ValueError
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
     
     # Trace 1: Pressure (Primary Y-axis)
     fig.add_trace(go.Scatter(
@@ -229,27 +327,28 @@ with trend_col1:
         line=dict(color='#000080', width=3), # Navy Blue
         fill='tozeroy',
         fillcolor='rgba(0, 0, 128, 0.1)'
-    ))
+    ), secondary_y=False) # Explicitly assign to primary axis
     
-    # Trace 2: Temperature (Secondary Y-axis, explicitly set to yaxis='y2')
+    # Trace 2: Temperature (Secondary Y-axis)
     fig.add_trace(go.Scatter(
         x=df_sim['Mileage (km)'], 
         y=df_sim['Temperature (°C)'], 
         name='Temperature (°C)',
         line=dict(color='#800080', width=3), # Purple
-        yaxis='y2' # CRUCIAL: Links this trace to the second axis
-    ))
+        secondary_y=True # Explicitly assign to secondary axis
+    ), secondary_y=True)
     
+    # Add horizontal critical line to the primary axis
     fig.add_hline(
         y=WEAR_THRESHOLD_PRESSURE, 
         line_dash="dash", 
         line_color="#FF4500",
         annotation_text="CRITICAL PRESSURE",
-        annotation_font_color="#FF4500"
+        annotation_font_color="#FF4500",
+        secondary_y=False # Ensure line goes on the correct axis
     )
     
-    # --- FIXED: FINAL STABLE PLOTLY LAYOUT STRUCTURE ---
-    # Rearranging and ensuring explicit dictionary usage prevents the deep ValueError
+    # Apply general layout settings
     fig.update_layout(
         height=250, 
         margin=dict(l=20, r=50, t=30, b=20),
@@ -262,28 +361,26 @@ with trend_col1:
             yanchor="bottom", y=1.02, xanchor="right", x=1
         ),
         xaxis=dict(gridcolor='#E0E0E0', title="Mileage (km)"),
-        
-        # Defining yaxis2 before yaxis sometimes stabilizes the Plotly rendering engine
-        # Secondary Y-axis (for Temperature)
-        yaxis2=dict(
-            title="Temperature (°C)", 
-            titlefont=dict(color="#800080"), 
-            tickfont=dict(color="#800080"),
-            overlaying='y', # Overlays y2 on y
-            side='right', 
-            gridcolor='#E0E0E0',
-            showgrid=False 
-        ),
-
-        # Primary Y-axis (for Pressure)
-        yaxis=dict(
-            title="Pressure (PSI)", 
-            titlefont=dict(color="#000080"), 
-            tickfont=dict(color="#000080"), 
-            gridcolor='#E0E0E0',
-        )
     )
-    # --- END FIXED PLOTLY LAYOUT ---
+    
+    # Apply primary axis settings using update_yaxes
+    fig.update_yaxes(
+        title_text="Pressure (PSI)", 
+        title_font=dict(color="#000080"), 
+        tickfont=dict(color="#000080"), 
+        gridcolor='#E0E0E0',
+        secondary_y=False 
+    )
+    
+    # Apply secondary axis settings using update_yaxes
+    fig.update_yaxes(
+        title_text="Temperature (°C)", 
+        title_font=dict(color="#800080"), 
+        tickfont=dict(color="#800080"),
+        gridcolor='#E0E0E0',
+        showgrid=False,
+        secondary_y=True 
+    )
     
     st.plotly_chart(fig, use_container_width=True)
 
