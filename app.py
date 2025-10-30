@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import plotly.graph_objects as go
 import streamlit.components.v1 as components
 import random
 
@@ -38,7 +39,7 @@ def generate_simulation_data():
     temp_start = 25
     mileage_start = 0
     
-    for i in range(50): 
+    for i in range(100): 
         pressure_start -= random.uniform(0.1, 0.3)
         temp_start += random.uniform(-1, 3)
         mileage_start += random.uniform(300, 800)
@@ -172,35 +173,6 @@ div.block-container {
     height: 20px; 
     border-radius: 8px; 
     border: 1px solid #00FFFF;
-}
-
-/* 11. TREND VISUALIZATION STYLES */
-.trend-container {
-    background: #0a0a0a;
-    border: 1px solid #00FFFF;
-    border-radius: 10px;
-    padding: 15px;
-    margin-bottom: 10px;
-}
-.trend-line {
-    height: 150px;
-    position: relative;
-    margin: 20px 0;
-}
-.data-point {
-    position: absolute;
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    transform: translate(-50%, -50%);
-}
-.critical-line {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: #FF0000;
-    border: 1px dashed #FF0000;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -349,51 +321,60 @@ with main_col3:
         st.metric("Cost Saved", "$2.8K", "+12%")
         st.metric("Risk Score", "24/100", "-8%")
 
-# --- BOTTOM SECTION: SIMPLE TREND VISUALIZATION ---
+# --- BOTTOM SECTION: SIMPLIFIED TREND VISUALIZATION ---
 st.markdown('<div class="cyber-divider"></div>', unsafe_allow_html=True)
 
-# Create a simple HTML-based trend visualization
+# Create a simplified trend visualization
 trend_col1, trend_col2 = st.columns([3, 1])
 
 with trend_col1:
     st.markdown("### ASSET HEALTH TREND ANALYSIS")
     
-    # Create HTML-based trend visualization
-    trend_html = """
-    <div class="trend-container">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-            <span style="color: #00FFFF;">Pressure Trend</span>
-            <span style="color: #FF00FF;">Temperature Trend</span>
-        </div>
-        <div class="trend-line" style="background: linear-gradient(180deg, transparent 0%, #1a1a1a 100%);">
-            <div class="critical-line" style="top: 70%;"></div>
-    """
+    # Create a much simpler plot to avoid layout issues
+    fig = go.Figure()
     
-    # Add data points for pressure
-    max_mileage = df_sim['Mileage (km)'].max()
-    max_pressure = df_sim['Pressure (PSI)'].max()
-    min_pressure = df_sim['Pressure (PSI)'].min()
+    # Pressure line
+    fig.add_trace(go.Scatter(
+        x=df_sim['Mileage (km)'], 
+        y=df_sim['Pressure (PSI)'], 
+        name='Pressure (PSI)',
+        line=dict(color='#00FFFF', width=2)
+    ))
     
-    for i, row in df_sim.iterrows():
-        x_pos = (row['Mileage (km)'] / max_mileage) * 95 + 2.5  # 2.5% to 97.5%
-        y_pos = 100 - ((row['Pressure (PSI)'] - min_pressure) / (max_pressure - min_pressure)) * 80  # 10% to 90%
-        
-        # Color based on pressure value
-        point_color = "#FF0000" if row['Pressure (PSI)'] < WEAR_THRESHOLD_PRESSURE else "#00FFFF"
-        
-        trend_html += f'<div class="data-point" style="left: {x_pos}%; top: {y_pos}%; background: {point_color};"></div>'
+    # Temperature line
+    fig.add_trace(go.Scatter(
+        x=df_sim['Mileage (km)'], 
+        y=df_sim['Temperature (°C)'], 
+        name='Temperature (°C)',
+        line=dict(color='#FF00FF', width=2),
+        yaxis='y2'
+    ))
     
-    trend_html += """
-        </div>
-        <div style="display: flex; justify-content: space-between; font-size: 0.8em; color: #888;">
-            <span>Start</span>
-            <span style="color: #FF0000;">Critical Threshold: """ + str(WEAR_THRESHOLD_PRESSURE) + """ PSI</span>
-            <span>Current</span>
-        </div>
-    </div>
-    """
+    # Critical threshold
+    fig.add_hline(
+        y=WEAR_THRESHOLD_PRESSURE, 
+        line_dash="dash", 
+        line_color="#FF0000",
+        annotation_text="Critical Pressure",
+        annotation_font_color="#FF0000"
+    )
     
-    components.html(trend_html, height=200)
+    # Minimal layout configuration
+    fig.update_layout(
+        height=200,
+        plot_bgcolor='#0a0a0a',
+        paper_bgcolor='#000000',
+        font_color='#e0e0e0',
+        showlegend=True,
+        margin=dict(l=40, r=40, t=30, b=30)
+    )
+    
+    # Simple axis configuration
+    fig.update_xaxes(title_text="Mileage (km)", gridcolor='#333333')
+    fig.update_yaxes(title_text="Pressure (PSI)", gridcolor='#333333', side='left')
+    fig.update_yaxes(title_text="Temperature (°C)", gridcolor='#333333', side='right', overlaying='y')
+    
+    st.plotly_chart(fig, use_container_width=True)
 
 with trend_col2:
     st.markdown("### ROI IMPACT")
