@@ -160,20 +160,6 @@ div.block-container {
 .status-normal { background: #00FF00; color: black; }
 .status-warning { background: #FFFF00; color: black; }
 .status-critical { background: #FF0000; color: white; }
-
-/* 10. GAUGE STYLES */
-.gauge-container {
-    background: #1a1a1a; 
-    border-radius: 10px; 
-    padding: 5px; 
-    margin-bottom: 15px;
-    border: 1px solid #00FFFF;
-}
-.gauge-fill {
-    height: 20px; 
-    border-radius: 8px; 
-    border: 1px solid #00FFFF;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -257,8 +243,9 @@ with main_col2:
     
     st.markdown(f"**PRESSURE:** {sim_pressure} PSI")
     st.markdown(f"""
-    <div class="gauge-container">
-        <div class="gauge-fill" style="background: linear-gradient(90deg, {pressure_color} {pressure_percent}%, #333 {pressure_percent}%);"></div>
+    <div style="background: #1a1a1a; border-radius: 10px; padding: 5px; margin-bottom: 15px;">
+        <div style="background: linear-gradient(90deg, {pressure_color} {pressure_percent}%, #333 {pressure_percent}%); 
+                    height: 20px; border-radius: 8px; border: 1px solid #00FFFF;"></div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -268,8 +255,9 @@ with main_col2:
     
     st.markdown(f"**TEMPERATURE:** {sim_temp}°C")
     st.markdown(f"""
-    <div class="gauge-container">
-        <div class="gauge-fill" style="background: linear-gradient(90deg, {temp_color} {temp_percent}%, #333 {temp_percent}%);"></div>
+    <div style="background: #1a1a1a; border-radius: 10px; padding: 5px; margin-bottom: 15px;">
+        <div style="background: linear-gradient(90deg, {temp_color} {temp_percent}%, #333 {temp_percent}%); 
+                    height: 20px; border-radius: 8px; border: 1px solid #00FFFF;"></div>
     </div>
     """, unsafe_allow_html=True)
     
@@ -279,8 +267,9 @@ with main_col2:
     
     st.markdown(f"**MILEAGE:** {sim_mileage} km")
     st.markdown(f"""
-    <div class="gauge-container">
-        <div class="gauge-fill" style="background: linear-gradient(90deg, {mileage_color} {mileage_percent}%, #333 {mileage_percent}%);"></div>
+    <div style="background: #1a1a1a; border-radius: 10px; padding: 5px; margin-bottom: 15px;">
+        <div style="background: linear-gradient(90deg, {mileage_color} {mileage_percent}%, #333 {mileage_percent}%); 
+                    height: 20px; border-radius: 8px; border: 1px solid #00FFFF;"></div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -321,58 +310,81 @@ with main_col3:
         st.metric("Cost Saved", "$2.8K", "+12%")
         st.metric("Risk Score", "24/100", "-8%")
 
-# --- BOTTOM SECTION: SIMPLIFIED TREND VISUALIZATION ---
+# --- BOTTOM SECTION: COMPACT TREND VISUALIZATION ---
 st.markdown('<div class="cyber-divider"></div>', unsafe_allow_html=True)
 
-# Create a simplified trend visualization
+# Create a compact trend visualization
 trend_col1, trend_col2 = st.columns([3, 1])
 
 with trend_col1:
     st.markdown("### ASSET HEALTH TREND ANALYSIS")
     
-    # Create a much simpler plot to avoid layout issues
     fig = go.Figure()
     
-    # Pressure line
+    # Add traces with cyberpunk colors
     fig.add_trace(go.Scatter(
         x=df_sim['Mileage (km)'], 
         y=df_sim['Pressure (PSI)'], 
-        name='Pressure (PSI)',
-        line=dict(color='#00FFFF', width=2)
+        name='Pressure',
+        line=dict(color='#00FFFF', width=3),
+        fill='tozeroy',
+        fillcolor='rgba(0, 255, 255, 0.1)'
     ))
     
-    # Temperature line
     fig.add_trace(go.Scatter(
         x=df_sim['Mileage (km)'], 
         y=df_sim['Temperature (°C)'], 
-        name='Temperature (°C)',
-        line=dict(color='#FF00FF', width=2),
+        name='Temperature',
+        line=dict(color='#FF00FF', width=3),
         yaxis='y2'
     ))
     
-    # Critical threshold
+    # Threshold lines
     fig.add_hline(
         y=WEAR_THRESHOLD_PRESSURE, 
         line_dash="dash", 
         line_color="#FF0000",
-        annotation_text="Critical Pressure",
+        annotation_text="CRITICAL PRESSURE",
         annotation_font_color="#FF0000"
     )
     
-    # Minimal layout configuration
+    # Fixed layout configuration - proper syntax
     fig.update_layout(
         height=200,
+        margin=dict(l=20, r=50, t=30, b=20),
         plot_bgcolor='#0a0a0a',
         paper_bgcolor='#000000',
         font_color='#e0e0e0',
         showlegend=True,
-        margin=dict(l=40, r=40, t=30, b=30)
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        )
     )
     
-    # Simple axis configuration
-    fig.update_xaxes(title_text="Mileage (km)", gridcolor='#333333')
-    fig.update_yaxes(title_text="Pressure (PSI)", gridcolor='#333333', side='left')
-    fig.update_yaxes(title_text="Temperature (°C)", gridcolor='#333333', side='right', overlaying='y')
+    # Separate axis updates
+    fig.update_yaxes(
+        title="Pressure (PSI)",
+        titlefont=dict(color="#00FFFF"),
+        tickfont=dict(color="#00FFFF"),
+        gridcolor='#1a1a1a'
+    )
+    
+    fig.update_yaxes(
+        title="Temperature (°C)",
+        titlefont=dict(color="#FF00FF"),
+        tickfont=dict(color="#FF00FF"),
+        overlaying='y',
+        side='right',
+        gridcolor='#1a1a1a'
+    )
+    
+    fig.update_xaxes(
+        gridcolor='#1a1a1a'
+    )
     
     st.plotly_chart(fig, use_container_width=True)
 
