@@ -310,8 +310,6 @@ with main_col3:
         st.metric("Cost Saved", "$2.8K", "+12%")
         st.metric("Risk Score", "24/100", "-8%")
 
-# --- COLUMN 4: Already used for controls ---
-
 # --- BOTTOM SECTION: COMPACT TREND VISUALIZATION ---
 st.markdown('<div class="cyber-divider"></div>', unsafe_allow_html=True)
 
@@ -350,6 +348,7 @@ with trend_col1:
         annotation_font_color="#FF0000"
     )
     
+    # Fixed layout configuration - proper syntax
     fig.update_layout(
         height=200,
         margin=dict(l=20, r=50, t=30, b=20),
@@ -363,24 +362,28 @@ with trend_col1:
             y=1.02,
             xanchor="right",
             x=1
-        ),
-        yaxis=dict(
-            title="Pressure (PSI)",
-            titlefont=dict(color="#00FFFF"),
-            tickfont=dict(color="#00FFFF"),
-            gridcolor='#1a1a1a'
-        ),
-        yaxis2=dict(
-            title="Temperature (°C)",
-            titlefont=dict(color="#FF00FF"),
-            tickfont=dict(color="#FF00FF"),
-            overlaying='y',
-            side='right',
-            gridcolor='#1a1a1a'
-        ),
-        xaxis=dict(
-            gridcolor='#1a1a1a'
         )
+    )
+    
+    # Separate axis updates
+    fig.update_yaxes(
+        title="Pressure (PSI)",
+        titlefont=dict(color="#00FFFF"),
+        tickfont=dict(color="#00FFFF"),
+        gridcolor='#1a1a1a'
+    )
+    
+    fig.update_yaxes(
+        title="Temperature (°C)",
+        titlefont=dict(color="#FF00FF"),
+        tickfont=dict(color="#FF00FF"),
+        overlaying='y',
+        side='right',
+        gridcolor='#1a1a1a'
+    )
+    
+    fig.update_xaxes(
+        gridcolor='#1a1a1a'
     )
     
     st.plotly_chart(fig, use_container_width=True)
