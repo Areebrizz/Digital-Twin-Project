@@ -278,7 +278,7 @@ div.block-container {
 """, unsafe_allow_html=True)
 
 # --- 3. COMPACT LAYOUT: Single Page, No Scroll ---
-header_col1, header_col2 = st.columns([4, 1])
+header_col1, header_col2 = st.columns([3, 1])
 
 with header_col1:
     st.markdown("# 🚀 META 4.0 DIGITAL TWIN COMMAND CENTER")
