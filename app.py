@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots # Necessary for stable dual-axis plot
+from plotly.subplots import make_subplots
 import streamlit.components.v1 as components
 import random
 
@@ -52,7 +52,7 @@ def generate_simulation_data():
 
 df_sim = generate_simulation_data()
 
-# --- 2. LIGHT THEME UI: Professional and High-Contrast (CSS omitted for brevity, assumed correct) ---
+# --- 2. LIGHT THEME UI: Professional and High-Contrast ---
 st.markdown("""
 <style>
 /* 1. BASE THEME: Bright White/Light Gray Background */
@@ -71,6 +71,11 @@ h1, h2, h3 {
     padding-bottom: 5px;
     margin-bottom: 0.5rem;
 }
+/* Reduce padding for H4 in ROI box to compact it */
+.stMarkdown h4 {
+    margin: 0;
+}
+
 
 /* 3. CONTAINERS & METRICS: Clean White Boxes with Blue Border */
 .stMetric {
@@ -122,7 +127,7 @@ div[role="slider"] {
     border-left: 4px solid #FF4500 !important; 
 }
 
-/* 6. ELIMINATE ALL WHITESPACE */
+/* 6. ELIMINATE ALL WHITESPACE (Critical for No-Scroll) */
 div.block-container {
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
@@ -170,6 +175,16 @@ header_col1, header_col2 = st.columns([3, 1])
 with header_col1:
     st.markdown("# 🚀 META 4.0 DIGITAL TWIN COMMAND CENTER")
     st.markdown("### Prescriptive Maintenance Intelligence Platform")
+    
+# --- NEW: INTRO / CONTEXT SECTION ---
+st.markdown("""
+<p style='font-size: 1.1em; margin-bottom: 10px; border: 1px dashed #ADD8E6; padding: 10px; border-radius: 5px;'>
+    **Problem:** Asset failures lead to unplanned downtime and high maintenance costs. 
+    **Solution:** This platform utilizes a **Digital Twin** fed by **Real-Time Telemetry** to predict component wear, enabling **Prescriptive Maintenance** before failure occurs.
+</p>
+""", unsafe_allow_html=True)
+st.markdown('<div class="cyber-divider"></div>', unsafe_allow_html=True)
+
 
 # Get current status
 sim_mileage = 20000
@@ -206,7 +221,6 @@ with main_col1:
     
     twin_glow = glow_colors.get(status_color, "rgba(0, 0, 128, 0.6)")
     
-    # Corrected GLB URL using raw content
     model_path = "https://raw.githubusercontent.com/Areebrizz/Digital-Twin-Project/main/offorad_vehicle_tires.glb" 
 
     html_code = f"""
@@ -225,6 +239,7 @@ with main_col1:
         </model-viewer>
     </div>
     """
+    # NOTE: components.html is essential here for rendering the 3D model
     components.html(html_code, height=300)
     
     # Status indicator below twin
@@ -315,11 +330,10 @@ trend_col1, trend_col2 = st.columns([4, 1])
 with trend_col1:
     st.markdown("### ASSET HEALTH TREND ANALYSIS")
     
-    # FIX 1: Use make_subplots to explicitly set up the secondary axis
+    # FIX: Stable Plotly Dual-Axis Setup
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     
     # Trace 1: Pressure (Primary Y-axis)
-    # FIX 2: Removed 'secondary_y' argument from INSIDE go.Scatter()
     fig.add_trace(go.Scatter(
         x=df_sim['Mileage (km)'], 
         y=df_sim['Pressure (PSI)'], 
@@ -327,16 +341,15 @@ with trend_col1:
         line=dict(color='#000080', width=3),
         fill='tozeroy',
         fillcolor='rgba(0, 0, 128, 0.1)'
-    ), secondary_y=False) # Correct placement for axis assignment
+    ), secondary_y=False) 
     
     # Trace 2: Temperature (Secondary Y-axis)
-    # FIX 2: Removed 'secondary_y' argument from INSIDE go.Scatter()
     fig.add_trace(go.Scatter(
         x=df_sim['Mileage (km)'], 
         y=df_sim['Temperature (°C)'], 
         name='Temperature (°C)',
         line=dict(color='#800080', width=3)
-    ), secondary_y=True) # Correct placement for axis assignment
+    ), secondary_y=True) 
     
     # Add horizontal critical line to the primary axis
     fig.add_hline(
