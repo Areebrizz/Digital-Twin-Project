@@ -165,7 +165,7 @@ with header_col1:
 # --- INTRO / CONTEXT SECTION (Sleek, direct, non-bolded text) ---
 st.markdown("""
 <div class='intro-box'>
-    <b>Problem:</b> Asset failures lead to unplanned downtime and high maintenance costs.
+    <b>Problem:</b> Asset failures lead to unplanned downtime and high maintenance costs.\n
         <b>Solution:</b> This platform utilizes a Digital Twin fed by Real-Time Telemetry to predict component wear, enabling Prescriptive Maintenance before failure occurs.
 </div>
 """, unsafe_allow_html=True)
