@@ -56,17 +56,17 @@ st.markdown("""
 <style>
 /* 1. BASE THEME: Bright White/Light Gray Background */
 .main {
-    background-color: #F8F8F8; /* Very light gray */
-    color: #111111; /* Near black text */
+    background-color: #F8F8F8; 
+    color: #111111; 
     padding-top: 0.5rem;
 }
 
 /* 2. HEADER & TITLE: Deep Blue Accent */
 h1, h2, h3 {
-    color: #000080; /* Navy Blue */
+    color: #000080; 
     font-family: 'Segoe UI', sans-serif;
     font-weight: 700;
-    border-bottom: 2px solid #ADD8E6; /* Light Blue separator */
+    border-bottom: 2px solid #ADD8E6; 
     padding-bottom: 5px;
     margin-bottom: 0.5rem;
 }
@@ -76,14 +76,14 @@ h1, h2, h3 {
     background-color: #FFFFFF;
     padding: 12px;
     border-radius: 10px;
-    border: 1px solid #000080; /* Navy Border */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    border: 1px solid #000080; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
     margin-bottom: 8px;
 }
 
 .stMetric > div:nth-child(1) > div:nth-child(1) {
     font-size: 1.8em;
-    color: #000080; /* Navy value */
+    color: #000080; 
     font-weight: 700;
 }
 
@@ -92,12 +92,12 @@ h1, h2, h3 {
     margin-bottom: 5px;
 }
 div[role="slider"] {
-    background-color: #E0E0E0; /* Light gray slider background */
+    background-color: #E0E0E0; 
     border-radius: 8px;
     border: 1px solid #000080;
 }
 .stSlider > div > div > div:nth-child(2) { 
-    background-color: #000080; /* Navy rail color */
+    background-color: #000080; 
 }
 
 /* 5. COMPACT ALERTS */
@@ -106,19 +106,19 @@ div[role="slider"] {
     margin-bottom: 8px;
     border-radius: 8px;
     font-size: 0.9em;
-    color: #111111; /* Dark text in alerts */
+    color: #111111; 
 }
 .stSuccess {  
-    background: #E6F7E6 !important; /* Very light green background */
-    border-left: 4px solid #3CB371 !important; /* Medium Sea Green */
+    background: #E6F7E6 !important; 
+    border-left: 4px solid #3CB371 !important; 
 }
 .stWarning { 
-    background: #FFFBE6 !important; /* Very light yellow background */
-    border-left: 4px solid #FFA500 !important; /* Orange */
+    background: #FFFBE6 !important; 
+    border-left: 4px solid #FFA500 !important; 
 }
 .stError { 
-    background: #FFEBE6 !important; /* Very light red background */
-    border-left: 4px solid #FF4500 !important; /* Orange Red */
+    background: #FFEBE6 !important; 
+    border-left: 4px solid #FF4500 !important; 
 }
 
 /* 6. ELIMINATE ALL WHITESPACE */
@@ -136,7 +136,7 @@ div.block-container {
 
 /* 8. CUSTOM COMPONENTS */
 .digital-twin-container {
-    border: 2px solid #000080; /* Navy Border */
+    border: 2px solid #000080; 
     border-radius: 12px;
     box-shadow: 0 0 10px rgba(0, 0, 128, 0.2);
     overflow: hidden;
@@ -197,9 +197,9 @@ with main_col1:
     
     # Dynamic glow based on status
     glow_colors = {
-        "green": "rgba(60, 179, 113, 0.6)", # Medium Sea Green
-        "yellow": "rgba(255, 165, 0, 0.6)", # Orange
-        "orange": "rgba(255, 69, 0, 0.6)",  # Orange Red
+        "green": "rgba(60, 179, 113, 0.6)", 
+        "yellow": "rgba(255, 165, 0, 0.6)", 
+        "orange": "rgba(255, 69, 0, 0.6)",  
         "red": "rgba(255, 0, 0, 0.6)"
     }
     
@@ -341,22 +341,34 @@ with trend_col1:
         annotation_font_color="#FF4500"
     )
     
+    # --- CORRECTED PLOTLY LAYOUT FOR STABILITY ---
     fig.update_layout(
         height=250, 
         margin=dict(l=20, r=50, t=30, b=20),
         plot_bgcolor='#FFFFFF',
         paper_bgcolor='#F8F8F8',
         font_color='#111111',
+        showlegend=True,
         legend=dict(
             orientation="h",
             yanchor="bottom", y=1.02, xanchor="right", x=1
         ),
+        # Primary Y-axis definition
         yaxis=dict(
-            title="Pressure (PSI)", titlefont=dict(color="#000080"), tickfont=dict(color="#000080"), gridcolor='#E0E0E0'
+            title="Pressure (PSI)", 
+            titlefont=dict(color="#000080"), 
+            tickfont=dict(color="#000080"), 
+            gridcolor='#E0E0E0'
         ),
+        # Secondary Y-axis definition
         yaxis2=dict(
-            title="Temperature (°C)", titlefont=dict(color="#800080"), tickfont=dict(color="#800080"),
-            overlaying='y', side='right', gridcolor='#E0E0E0'
+            title="Temperature (°C)", 
+            titlefont=dict(color="#800080"), 
+            tickfont=dict(color="#800080"),
+            overlaying='y', 
+            side='right', 
+            gridcolor='#E0E0E0',
+            showgrid=False # Optional: Hide grid for secondary axis to avoid clutter
         ),
         xaxis=dict(gridcolor='#E0E0E0')
     )
