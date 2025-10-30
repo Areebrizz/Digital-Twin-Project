@@ -165,8 +165,8 @@ with header_col1:
 # --- INTRO / CONTEXT SECTION (Sleek, direct, non-bolded text) ---
 st.markdown("""
 <div class='intro-box'>
-    **Problem:** Asset failures lead to unplanned downtime and high maintenance costs. 
-    **Solution:** This platform utilizes a **Digital Twin** fed by **Real-Time Telemetry** to predict component wear, enabling **Prescriptive Maintenance** before failure occurs.
+    <b>Problem:</b> Asset failures lead to unplanned downtime and high maintenance costs. 
+    <b>Solution:</b> This platform utilizes a Digital Twin fed by Real-Time Telemetry to predict component wear, enabling Prescriptive Maintenance before failure occurs.
 </div>
 """, unsafe_allow_html=True)
 st.markdown('<div class="cyber-divider"></div>', unsafe_allow_html=True)
