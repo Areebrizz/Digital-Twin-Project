@@ -2,10 +2,9 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots # NEW: Required for stable dual-axis plot
+from plotly.subplots import make_subplots # Necessary for stable dual-axis plot
 import streamlit.components.v1 as components
 import random
-# import os # Not needed if using the public GitHub URL for the model
 
 # --- CONFIGURATION: Full Screen, No Scroll ---
 st.set_page_config(
@@ -53,7 +52,7 @@ def generate_simulation_data():
 
 df_sim = generate_simulation_data()
 
-# --- 2. LIGHT THEME UI: Professional and High-Contrast ---
+# --- 2. LIGHT THEME UI: Professional and High-Contrast (CSS omitted for brevity, assumed correct) ---
 st.markdown("""
 <style>
 /* 1. BASE THEME: Bright White/Light Gray Background */
@@ -207,7 +206,7 @@ with main_col1:
     
     twin_glow = glow_colors.get(status_color, "rgba(0, 0, 128, 0.6)")
     
-    # CORRECTED: Using the raw GitHub content URL for the GLB model
+    # Corrected GLB URL using raw content
     model_path = "https://raw.githubusercontent.com/Areebrizz/Digital-Twin-Project/main/offorad_vehicle_tires.glb" 
 
     html_code = f"""
@@ -316,27 +315,28 @@ trend_col1, trend_col2 = st.columns([4, 1])
 with trend_col1:
     st.markdown("### ASSET HEALTH TREND ANALYSIS")
     
-    # FIX: Use make_subplots to explicitly set up the secondary axis and prevent ValueError
+    # FIX 1: Use make_subplots to explicitly set up the secondary axis
     fig = make_subplots(specs=[[{"secondary_y": True}]])
     
     # Trace 1: Pressure (Primary Y-axis)
+    # FIX 2: Removed 'secondary_y' argument from INSIDE go.Scatter()
     fig.add_trace(go.Scatter(
         x=df_sim['Mileage (km)'], 
         y=df_sim['Pressure (PSI)'], 
         name='Pressure (PSI)',
-        line=dict(color='#000080', width=3), # Navy Blue
+        line=dict(color='#000080', width=3),
         fill='tozeroy',
         fillcolor='rgba(0, 0, 128, 0.1)'
-    ), secondary_y=False) # Explicitly assign to primary axis
+    ), secondary_y=False) # Correct placement for axis assignment
     
     # Trace 2: Temperature (Secondary Y-axis)
+    # FIX 2: Removed 'secondary_y' argument from INSIDE go.Scatter()
     fig.add_trace(go.Scatter(
         x=df_sim['Mileage (km)'], 
         y=df_sim['Temperature (°C)'], 
         name='Temperature (°C)',
-        line=dict(color='#800080', width=3), # Purple
-        secondary_y=True # Explicitly assign to secondary axis
-    ), secondary_y=True)
+        line=dict(color='#800080', width=3)
+    ), secondary_y=True) # Correct placement for axis assignment
     
     # Add horizontal critical line to the primary axis
     fig.add_hline(
@@ -345,7 +345,7 @@ with trend_col1:
         line_color="#FF4500",
         annotation_text="CRITICAL PRESSURE",
         annotation_font_color="#FF4500",
-        secondary_y=False # Ensure line goes on the correct axis
+        secondary_y=False
     )
     
     # Apply general layout settings
