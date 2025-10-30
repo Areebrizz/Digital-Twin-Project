@@ -313,9 +313,9 @@ trend_col1, trend_col2 = st.columns([4, 1])
 with trend_col1:
     st.markdown("### ASSET HEALTH TREND ANALYSIS")
     
-    # Use Plotly Default Theme but override colors for Light background
     fig = go.Figure()
     
+    # Trace 1: Pressure (Primary Y-axis)
     fig.add_trace(go.Scatter(
         x=df_sim['Mileage (km)'], 
         y=df_sim['Pressure (PSI)'], 
@@ -325,12 +325,13 @@ with trend_col1:
         fillcolor='rgba(0, 0, 128, 0.1)'
     ))
     
+    # Trace 2: Temperature (Secondary Y-axis, explicitly set to yaxis='y2')
     fig.add_trace(go.Scatter(
         x=df_sim['Mileage (km)'], 
         y=df_sim['Temperature (°C)'], 
         name='Temperature (°C)',
         line=dict(color='#800080', width=3), # Purple
-        yaxis='y2'
+        yaxis='y2' # CRUCIAL: Links this trace to the second axis
     ))
     
     fig.add_hline(
@@ -338,13 +339,10 @@ with trend_col1:
         line_dash="dash", 
         line_color="#FF4500",
         annotation_text="CRITICAL PRESSURE",
-        annotation_position="top right", # Ensure annotation doesn't interfere
         annotation_font_color="#FF4500"
     )
     
-    # --- FINAL STABLE PLOTLY LAYOUT (Separating layout updates for stability) ---
-    
-    # 1. Update general layout properties
+    # --- FINAL STABLE PLOTLY LAYOUT: DEFINES BOTH AXES SIMULTANEOUSLY ---
     fig.update_layout(
         height=250, 
         margin=dict(l=20, r=50, t=30, b=20),
@@ -356,27 +354,27 @@ with trend_col1:
             orientation="h",
             yanchor="bottom", y=1.02, xanchor="right", x=1
         ),
-        xaxis=dict(gridcolor='#E0E0E0')
-    )
-    
-    # 2. Update Y-axes separately (more robust in some Streamlit environments)
-    fig.update_yaxes(
-        title="Pressure (PSI)", 
-        titlefont=dict(color="#000080"), 
-        tickfont=dict(color="#000080"), 
-        gridcolor='#E0E0E0',
-        row=1, col=1 # Explicitly set row/col for single subplot
-    )
-    
-    fig.update_yaxes(
-        title="Temperature (°C)", 
-        titlefont=dict(color="#800080"), 
-        tickfont=dict(color="#800080"),
-        overlaying='y', 
-        side='right', 
-        gridcolor='#E0E0E0',
-        showgrid=False,
-        row=1, col=1 # Explicitly set row/col for single subplot
+        # X-axis definition
+        xaxis=dict(gridcolor='#E0E0E0', title="Mileage (km)"),
+        
+        # Primary Y-axis (for Pressure)
+        yaxis=dict(
+            title="Pressure (PSI)", 
+            titlefont=dict(color="#000080"), 
+            tickfont=dict(color="#000080"), 
+            gridcolor='#E0E0E0',
+        ),
+        
+        # Secondary Y-axis (for Temperature)
+        yaxis2=dict(
+            title="Temperature (°C)", 
+            titlefont=dict(color="#800080"), 
+            tickfont=dict(color="#800080"),
+            overlaying='y', # CRUCIAL: Overlays y2 on y
+            side='right', 
+            gridcolor='#E0E0E0',
+            showgrid=False 
+        )
     )
     # --- END FINAL STABLE PLOTLY LAYOUT ---
     
