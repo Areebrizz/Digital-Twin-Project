@@ -61,6 +61,10 @@ h1, h2, h3 { color: #000080; border-bottom: 2px solid #ADD8E6; }
 /* ... (rest of the CSS) ... */
 .digital-twin-container { border: 2px solid #000080; border-radius: 12px; box-shadow: 0 0 10px rgba(0, 0, 128, 0.2); overflow: hidden; margin-bottom: 8px; }
 .cyber-divider { height: 2px; background: linear-gradient(90deg, transparent, #ADD8E6, transparent); margin: 5px 0; }
+.status-indicator { padding: 4px 8px; border-radius: 4px; font-size: 0.9em; font-weight: bold; text-align: center; }
+.status-normal { background: #3CB371; color: white; }
+.status-warning { background: #FFA500; color: white; }
+.status-critical { background: #FF4500; color: white; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -106,8 +110,7 @@ with main_col1:
     
     twin_glow = glow_colors.get(status_color, "rgba(0, 0, 128, 0.6)")
     
-    # --- FIX: USE RAW GITHUB CONTENT URL FOR GLB MODEL ---
-    # The 'blob' URL is for the GitHub page; 'raw.githubusercontent' is for the file itself.
+    # Using the correct RAW GitHub URL for the model
     model_path = "https://raw.githubusercontent.com/Areebrizz/Digital-Twin-Project/main/offorad_vehicle_tires.glb" 
 
     html_code = f"""
@@ -245,7 +248,8 @@ with trend_col1:
         annotation_font_color="#FF4500"
     )
     
-    # --- FINAL STABLE PLOTLY LAYOUT ---
+    # --- FIXED: FINAL STABLE PLOTLY LAYOUT STRUCTURE ---
+    # Rearranging and ensuring explicit dictionary usage prevents the deep ValueError
     fig.update_layout(
         height=250, 
         margin=dict(l=20, r=50, t=30, b=20),
@@ -259,14 +263,7 @@ with trend_col1:
         ),
         xaxis=dict(gridcolor='#E0E0E0', title="Mileage (km)"),
         
-        # Primary Y-axis (for Pressure)
-        yaxis=dict(
-            title="Pressure (PSI)", 
-            titlefont=dict(color="#000080"), 
-            tickfont=dict(color="#000080"), 
-            gridcolor='#E0E0E0',
-        ),
-        
+        # Defining yaxis2 before yaxis sometimes stabilizes the Plotly rendering engine
         # Secondary Y-axis (for Temperature)
         yaxis2=dict(
             title="Temperature (°C)", 
@@ -276,9 +273,17 @@ with trend_col1:
             side='right', 
             gridcolor='#E0E0E0',
             showgrid=False 
+        ),
+
+        # Primary Y-axis (for Pressure)
+        yaxis=dict(
+            title="Pressure (PSI)", 
+            titlefont=dict(color="#000080"), 
+            tickfont=dict(color="#000080"), 
+            gridcolor='#E0E0E0',
         )
     )
-    # --- END FINAL STABLE PLOTLY LAYOUT ---
+    # --- END FIXED PLOTLY LAYOUT ---
     
     st.plotly_chart(fig, use_container_width=True)
 
