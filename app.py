@@ -6,157 +6,156 @@ from plotly.subplots import make_subplots
 import streamlit.components.v1 as components
 import random
 
-# --- CONFIGURATION: Full Screen, No Scroll ---
-st.set_page_config(
-    page_title="META 4.0 Digital Twin Command Center",
-    page_icon="⚙️",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
-
-# --- 1. REALISTIC CONSTANTS & BUSINESS LOGIC ---
-# Tire pressure thresholds (realistic for heavy vehicles)
-WEAR_THRESHOLD_PRESSURE = 28.0  # Critical pressure for off-road tires
+# --- REALISTIC CONSTANTS & BUSINESS LOGIC ---
+# Tire pressure thresholds (REALISTIC ranges for heavy vehicles)
+WEAR_THRESHOLD_PRESSURE = 28.0  # Critical UNDER-inflation
+OVERPRESSURE_THRESHOLD = 38.0   # Critical OVER-inflation (would cause blowout)
 OPTIMAL_PRESSURE_RANGE = (30.0, 35.0)  # Ideal operating range
-PRESSURE_ALERT_THRESHOLD = 29.0  # Early warning threshold
+PRESSURE_ALERT_THRESHOLD = 29.0  # Early warning for under-inflation
+OVERPRESSURE_ALERT = 36.0       # Early warning for over-inflation
 
 # Mileage thresholds (realistic for tire lifespan)
 HIGH_MILEAGE_THRESHOLD = 40000.0  # km - typical tire lifespan
 MILEAGE_ALERT_THRESHOLD = 35000.0  # Early warning
 
-# Temperature thresholds (realistic for tire operation)
-CRITICAL_TEMP_THRESHOLD = 80.0  # °C - dangerous temperature
-TEMP_ALERT_THRESHOLD = 70.0  # °C - warning threshold
-OPTIMAL_TEMP_RANGE = (40.0, 65.0)  # Normal operating range
+# Temperature thresholds (REALISTIC for tire operation)
+CRITICAL_TEMP_THRESHOLD = 85.0  # °C - dangerous temperature (rubber degradation)
+TEMP_ALERT_THRESHOLD = 75.0     # °C - warning threshold
+OPTIMAL_TEMP_RANGE = (45.0, 70.0)  # Normal operating range
 
-# Business metrics (realistic calculations)
-BASE_MAINTENANCE_COST = 1200  # $ per unplanned maintenance event
-TIRE_REPLACEMENT_COST = 800   # $ per tire
-DAILY_OPERATIONAL_COST = 450  # $ per day of downtime
-FUEL_COST_PER_KM = 0.85      # $ per km for heavy vehicle
+# Business metrics (REALISTIC calculations)
+BASE_MAINTENANCE_COST = 1200    # $ per unplanned maintenance event
+TIRE_REPLACEMENT_COST = 800     # $ per tire
+DAILY_OPERATIONAL_COST = 1200   # $ per day of downtime (heavy equipment)
+CATASTROPHIC_FAILURE_COST = 5000 # $ for catastrophic failure (blowout + damage)
 
 def predict_wear_and_status(pressure, mileage, temp):
-    """Predicts the tire status with realistic multi-factor analysis."""
+    """REALISTIC multi-factor risk assessment"""
     risk_factors = 0
+    critical_issues = []
     
-    # Pressure analysis
+    # PRESSURE ANALYSIS (FIXED)
     if pressure < WEAR_THRESHOLD_PRESSURE:
-        risk_factors += 3  # Critical pressure
+        risk_factors += 3  # Critical under-inflation
+        critical_issues.append("CRITICAL UNDER-INFLATION")
+    elif pressure > OVERPRESSURE_THRESHOLD:
+        risk_factors += 3  # Critical over-inflation (blowout risk)
+        critical_issues.append("CRITICAL OVER-INFLATION - BLOWOUT RISK")
     elif pressure < PRESSURE_ALERT_THRESHOLD:
-        risk_factors += 2  # Warning pressure
-    elif not OPTIMAL_PRESSURE_RANGE[0] <= pressure <= OPTIMAL_PRESSURE_RANGE[1]:
-        risk_factors += 1  # Suboptimal pressure
+        risk_factors += 2  # Warning under-inflation
+    elif pressure > OVERPRESSURE_ALERT:
+        risk_factors += 2  # Warning over-inflation
     
-    # Mileage analysis
+    # MILEAGE ANALYSIS
     if mileage > HIGH_MILEAGE_THRESHOLD:
-        risk_factors += 3  # Critical mileage
+        risk_factors += 2  # High mileage wear
+        critical_issues.append("END OF SERVICE LIFE")
     elif mileage > MILEAGE_ALERT_THRESHOLD:
-        risk_factors += 2  # Warning mileage
+        risk_factors += 1  # Warning mileage
     
-    # Temperature analysis
+    # TEMPERATURE ANALYSIS (FIXED)
     if temp > CRITICAL_TEMP_THRESHOLD:
-        risk_factors += 3  # Critical temperature
+        risk_factors += 3  # Critical temperature (rubber degradation)
+        critical_issues.append("CRITICAL TEMPERATURE - RUBBER DEGRADATION")
     elif temp > TEMP_ALERT_THRESHOLD:
         risk_factors += 2  # Warning temperature
-    elif not OPTIMAL_TEMP_RANGE[0] <= temp <= OPTIMAL_TEMP_RANGE[1]:
-        risk_factors += 1  # Suboptimal temperature
     
     # Multi-factor risk assessment
-    if risk_factors >= 6:
-        return "CRITICAL FAILURE IMMINENT", "red", "🛑"
+    if risk_factors >= 6 or critical_issues:
+        if "BLOWOUT RISK" in critical_issues or "RUBBER DEGRADATION" in critical_issues:
+            return "CRITICAL: IMMINENT FAILURE RISK", "red", "🛑"
+        else:
+            return "CRITICAL: MULTIPLE FAILURE FACTORS", "red", "🚨"
     elif risk_factors >= 4:
-        return "HIGH RISK: MULTIPLE FACTORS", "orange", "🚨"
+        return "HIGH RISK: MAINTENANCE REQUIRED", "orange", "⚠️"
     elif risk_factors >= 2:
-        return "WARNING: ELEVATED RISK", "yellow", "⚠️"
+        return "WARNING: ELEVATED RISK", "yellow", "🔶"
     else:
         return "NORMAL OPERATING STATE", "green", "✅"
 
 def calculate_business_metrics(pressure, mileage, temp, status_color):
-    """Calculate realistic business metrics based on current state."""
+    """REALISTIC business metrics calculations"""
     
-    # Base efficiency (affected by pressure)
-    pressure_efficiency = 1.0
-    if pressure < OPTIMAL_PRESSURE_RANGE[0]:
-        pressure_efficiency = 0.85 - (OPTIMAL_PRESSURE_RANGE[0] - pressure) * 0.03
-    elif pressure > OPTIMAL_PRESSURE_RANGE[1]:
-        pressure_efficiency = 0.95 - (pressure - OPTIMAL_PRESSURE_RANGE[1]) * 0.02
-    
-    # Fuel efficiency impact (realistic ranges)
+    # FUEL EFFICIENCY (FIXED - over-inflation should improve efficiency initially)
     fuel_efficiency_impact = 0
     if pressure < OPTIMAL_PRESSURE_RANGE[0]:
-        fuel_efficiency_impact = -((OPTIMAL_PRESSURE_RANGE[0] - pressure) * 2.5)  # 2.5% per PSI under
+        # Under-inflation: 0.5% fuel loss per PSI under optimal
+        fuel_efficiency_impact = -((OPTIMAL_PRESSURE_RANGE[0] - pressure) * 0.5)
     elif pressure > OPTIMAL_PRESSURE_RANGE[1]:
-        fuel_efficiency_impact = -((pressure - OPTIMAL_PRESSURE_RANGE[1]) * 1.0)  # 1% per PSI over
+        # Over-inflation: slight improvement up to a point, then negative
+        over_pressure = pressure - OPTIMAL_PRESSURE_RANGE[1]
+        if over_pressure <= 3:  # Slight over-inflation can improve efficiency
+            fuel_efficiency_impact = min(2.0, over_pressure * 0.7)
+        else:  # Extreme over-inflation reduces efficiency
+            fuel_efficiency_impact = 2.0 - ((over_pressure - 3) * 1.5)
     
-    # Maintenance cost savings (based on predictive capabilities)
-    base_maintenance_cost = 1200
+    # Temperature impact on fuel efficiency
+    if temp > OPTIMAL_TEMP_RANGE[1]:
+        temp_impact = -((temp - OPTIMAL_TEMP_RANGE[1]) * 0.2)  # High temp reduces efficiency
+        fuel_efficiency_impact += temp_impact
+    
+    # MAINTENANCE COST SAVINGS (FIXED - realistic values)
     if status_color == "green":
-        maintenance_savings = base_maintenance_cost * 0.85  # 15% savings with good maintenance
+        maintenance_savings = 1800  # $ - preventive maintenance savings
         risk_score = random.randint(15, 25)
+        uptime = 98.2
     elif status_color == "yellow":
-        maintenance_savings = base_maintenance_cost * 0.70  # 30% savings with early detection
+        maintenance_savings = 2400  # $ - early detection savings
         risk_score = random.randint(35, 50)
+        uptime = 96.5
     elif status_color == "orange":
-        maintenance_savings = base_maintenance_cost * 0.50  # 50% savings by avoiding breakdown
+        maintenance_savings = 3600  # $ - avoiding major repairs
         risk_score = random.randint(60, 75)
-    else:
-        maintenance_savings = base_maintenance_cost * 0.20  # 80% savings by preventing catastrophic failure
-        risk_score = random.randint(85, 95)
+        uptime = 94.0
+    else:  # red/critical
+        maintenance_savings = 4800  # $ - preventing catastrophic failure
+        risk_score = random.randint(85, 98)
+        uptime = 89.0
     
-    # Uptime calculation (affected by maintenance state)
-    base_uptime = 97.5
-    if status_color == "green":
-        uptime = base_uptime + random.uniform(0.8, 1.5)
-    elif status_color == "yellow":
-        uptime = base_uptime - random.uniform(0.5, 1.2)
-    elif status_color == "orange":
-        uptime = base_uptime - random.uniform(2.0, 3.5)
-    else:
-        uptime = base_uptime - random.uniform(5.0, 8.0)
+    # Additional mileage impact
+    if mileage > HIGH_MILEAGE_THRESHOLD:
+        maintenance_savings += 800  # Additional savings from avoiding tire replacement
+        uptime -= 2.0
     
     return {
         "uptime": round(uptime, 1),
-        "fuel_efficiency": max(-15, min(5, fuel_efficiency_impact)),
-        "maintenance_savings": int(maintenance_savings),
-        "risk_score": risk_score,
-        "pressure_efficiency": pressure_efficiency
+        "fuel_efficiency": round(fuel_efficiency_impact, 1),
+        "maintenance_savings": maintenance_savings,
+        "risk_score": risk_score
     }
 
-@st.cache_data
-def generate_simulation_data():
-    """Generates realistic simulation data with proper wear patterns."""
-    data = []
-    pressure_start = 33.5  # Start at optimal pressure
-    temp_start = 45.0      # Start at normal operating temp
-    mileage_start = 0
+# Update the pressure slider in your I/O SIMULATOR section:
+with main_col4:
+    st.markdown("### I/O SIMULATOR")
+    st.caption("Test different operational scenarios")
     
-    # Realistic wear simulation
-    for i in range(150): 
-        # Pressure decreases gradually with some randomness
-        pressure_wear = random.uniform(0.08, 0.25)  # Realistic pressure loss per interval
-        if mileage_start > 25000:  # Increased wear after 25k km
-            pressure_wear *= 1.3
-        pressure_start -= pressure_wear
-        
-        # Temperature fluctuates based on mileage and pressure
-        temp_change = random.uniform(-2, 4)
-        if pressure_start < 30:  # Lower pressure increases temperature
-            temp_change += random.uniform(1, 3)
-        if mileage_start > 30000:  # Older tires run hotter
-            temp_change += random.uniform(0.5, 2)
-        temp_start = max(25, min(95, temp_start + temp_change))
-        
-        # Mileage accumulation
-        mileage_start += random.uniform(250, 600)  # Realistic distance intervals
-        
-        data.append((mileage_start, round(pressure_start, 2), round(temp_start, 1)))
-        
-        # Stop simulation if pressure critically low or temperature critically high
-        if pressure_start < WEAR_THRESHOLD_PRESSURE - 2 or temp_start > CRITICAL_TEMP_THRESHOLD + 5:
-            break 
-    
-    df = pd.DataFrame(data, columns=['Mileage (km)', 'Pressure (PSI)', 'Temperature (°C)'])
-    return df
+    # REALISTIC slider ranges
+    sim_mileage = st.slider("Mileage (km)", 0, 50000, 18500, 500, 
+                           help="Typical tire lifespan: 40,000 km")
+    sim_pressure = st.slider("Pressure (PSI)", 25.0, 40.0, 32.2, 0.1,  # CHANGED RANGE: 25-40 PSI
+                            help="Optimal: 30-35 PSI, Critical: <28 PSI or >38 PSI")
+    sim_temp = st.slider("Temperature (°C)", 30.0, 90.0, 52.5, 0.5,  # CHANGED RANGE: 30-90°C
+                        help="Optimal: 45-70°C, Critical: >85°C")
+
+# Update the gauge sections with better logic:
+
+# PRESSURE GAUGE (FIXED)
+pressure_percent = max(0, min(100, (sim_pressure - 25) / (40 - 25) * 100))  # UPDATED RANGE
+if OPTIMAL_PRESSURE_RANGE[0] <= sim_pressure <= OPTIMAL_PRESSURE_RANGE[1]:
+    pressure_color = "#3CB371"  # Green - optimal
+elif sim_pressure < WEAR_THRESHOLD_PRESSURE or sim_pressure > OVERPRESSURE_THRESHOLD:
+    pressure_color = "#FF4500"  # Red - critical
+else:
+    pressure_color = "#FFA500"  # Orange - warning
+
+# TEMPERATURE GAUGE (FIXED)
+temp_percent = max(0, min(100, (sim_temp - 30) / (90 - 30) * 100))  # UPDATED RANGE
+if OPTIMAL_TEMP_RANGE[0] <= sim_temp <= OPTIMAL_TEMP_RANGE[1]:
+    temp_color = "#3CB371"  # Green - optimal
+elif sim_temp > CRITICAL_TEMP_THRESHOLD:
+    temp_color = "#FF4500"  # Red - critical
+else:
+    temp_color = "#FFA500"  # Orange - warning
 
 df_sim = generate_simulation_data()
 
