@@ -6,7 +6,15 @@ from plotly.subplots import make_subplots
 import streamlit.components.v1 as components
 import random
 
-# --- REALISTIC CONSTANTS & BUSINESS LOGIC ---
+# --- CONFIGURATION: Full Screen, No Scroll ---
+st.set_page_config(
+    page_title="META 4.0 Digital Twin Command Center",
+    page_icon="⚙️",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
+# --- 1. REALISTIC CONSTANTS & BUSINESS LOGIC ---
 # Tire pressure thresholds (REALISTIC ranges for heavy vehicles)
 WEAR_THRESHOLD_PRESSURE = 28.0  # Critical UNDER-inflation
 OVERPRESSURE_THRESHOLD = 38.0   # Critical OVER-inflation (would cause blowout)
@@ -124,38 +132,41 @@ def calculate_business_metrics(pressure, mileage, temp, status_color):
         "risk_score": risk_score
     }
 
-# Update the pressure slider in your I/O SIMULATOR section:
-with main_col4:
-    st.markdown("### I/O SIMULATOR")
-    st.caption("Test different operational scenarios")
+@st.cache_data
+def generate_simulation_data():
+    """Generates realistic simulation data with proper wear patterns."""
+    data = []
+    pressure_start = 33.5  # Start at optimal pressure
+    temp_start = 55.0      # Start at normal operating temp
+    mileage_start = 0
     
-    # REALISTIC slider ranges
-    sim_mileage = st.slider("Mileage (km)", 0, 50000, 18500, 500, 
-                           help="Typical tire lifespan: 40,000 km")
-    sim_pressure = st.slider("Pressure (PSI)", 25.0, 40.0, 32.2, 0.1,  # CHANGED RANGE: 25-40 PSI
-                            help="Optimal: 30-35 PSI, Critical: <28 PSI or >38 PSI")
-    sim_temp = st.slider("Temperature (°C)", 30.0, 90.0, 52.5, 0.5,  # CHANGED RANGE: 30-90°C
-                        help="Optimal: 45-70°C, Critical: >85°C")
-
-# Update the gauge sections with better logic:
-
-# PRESSURE GAUGE (FIXED)
-pressure_percent = max(0, min(100, (sim_pressure - 25) / (40 - 25) * 100))  # UPDATED RANGE
-if OPTIMAL_PRESSURE_RANGE[0] <= sim_pressure <= OPTIMAL_PRESSURE_RANGE[1]:
-    pressure_color = "#3CB371"  # Green - optimal
-elif sim_pressure < WEAR_THRESHOLD_PRESSURE or sim_pressure > OVERPRESSURE_THRESHOLD:
-    pressure_color = "#FF4500"  # Red - critical
-else:
-    pressure_color = "#FFA500"  # Orange - warning
-
-# TEMPERATURE GAUGE (FIXED)
-temp_percent = max(0, min(100, (sim_temp - 30) / (90 - 30) * 100))  # UPDATED RANGE
-if OPTIMAL_TEMP_RANGE[0] <= sim_temp <= OPTIMAL_TEMP_RANGE[1]:
-    temp_color = "#3CB371"  # Green - optimal
-elif sim_temp > CRITICAL_TEMP_THRESHOLD:
-    temp_color = "#FF4500"  # Red - critical
-else:
-    temp_color = "#FFA500"  # Orange - warning
+    # Realistic wear simulation
+    for i in range(150): 
+        # Pressure decreases gradually with some randomness
+        pressure_wear = random.uniform(0.08, 0.25)  # Realistic pressure loss per interval
+        if mileage_start > 25000:  # Increased wear after 25k km
+            pressure_wear *= 1.3
+        pressure_start -= pressure_wear
+        
+        # Temperature fluctuates based on mileage and pressure
+        temp_change = random.uniform(-2, 4)
+        if pressure_start < 30:  # Lower pressure increases temperature
+            temp_change += random.uniform(1, 3)
+        if mileage_start > 30000:  # Older tires run hotter
+            temp_change += random.uniform(0.5, 2)
+        temp_start = max(30, min(90, temp_start + temp_change))
+        
+        # Mileage accumulation
+        mileage_start += random.uniform(250, 600)  # Realistic distance intervals
+        
+        data.append((mileage_start, round(pressure_start, 2), round(temp_start, 1)))
+        
+        # Stop simulation if pressure critically low or temperature critically high
+        if pressure_start < WEAR_THRESHOLD_PRESSURE - 2 or temp_start > CRITICAL_TEMP_THRESHOLD + 5:
+            break 
+    
+    df = pd.DataFrame(data, columns=['Mileage (km)', 'Pressure (PSI)', 'Temperature (°C)'])
+    return df
 
 df_sim = generate_simulation_data()
 
@@ -265,6 +276,7 @@ div.block-container {
     padding: 5px; 
     margin-bottom: 15px;
     border: 1px solid #000080;
+    position: relative;
 }
 .gauge-optimal-range {
     background: rgba(60, 179, 113, 0.3);
@@ -272,6 +284,13 @@ div.block-container {
     border-radius: 6px;
     position: absolute;
     z-index: 1;
+}
+.gauge-fill {
+    height: 15px;
+    border-radius: 6px;
+    border: 1px solid #000080;
+    position: relative;
+    z-index: 2;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -305,13 +324,13 @@ with main_col4:
     st.markdown("### I/O SIMULATOR")
     st.caption("Test different operational scenarios")
     
-    # Realistic slider ranges
+    # REALISTIC slider ranges
     sim_mileage = st.slider("Mileage (km)", 0, 50000, 18500, 500, 
                            help="Typical tire lifespan: 40,000 km")
-    sim_pressure = st.slider("Pressure (PSI)", 20.0, 45.0, 32.2, 0.1,
-                            help="Optimal range: 30-35 PSI, Critical: <28 PSI")
-    sim_temp = st.slider("Temperature (°C)", 20.0, 100.0, 52.5, 0.5,
-                        help="Optimal range: 40-65°C, Critical: >80°C")
+    sim_pressure = st.slider("Pressure (PSI)", 25.0, 40.0, 32.2, 0.1,
+                            help="Optimal: 30-35 PSI, Critical: <28 PSI or >38 PSI")
+    sim_temp = st.slider("Temperature (°C)", 30.0, 90.0, 52.5, 0.5,
+                        help="Optimal: 45-70°C, Critical: >85°C")
 
 # Calculate status and business metrics
 status_text, status_color, status_icon = predict_wear_and_status(sim_pressure, sim_mileage, sim_temp)
@@ -365,55 +384,80 @@ with main_col2:
     st.markdown("### REAL-TIME TELEMETRY")
     
     # Calculate optimal range positions for gauges
-    pressure_optimal_start = ((OPTIMAL_PRESSURE_RANGE[0] - 20) / (45 - 20)) * 100
-    pressure_optimal_width = ((OPTIMAL_PRESSURE_RANGE[1] - OPTIMAL_PRESSURE_RANGE[0]) / (45 - 20)) * 100
+    pressure_optimal_start = ((OPTIMAL_PRESSURE_RANGE[0] - 25) / (40 - 25)) * 100
+    pressure_optimal_width = ((OPTIMAL_PRESSURE_RANGE[1] - OPTIMAL_PRESSURE_RANGE[0]) / (40 - 25)) * 100
     
-    temp_optimal_start = ((OPTIMAL_TEMP_RANGE[0] - 20) / (100 - 20)) * 100
-    temp_optimal_width = ((OPTIMAL_TEMP_RANGE[1] - OPTIMAL_TEMP_RANGE[0]) / (100 - 20)) * 100
+    temp_optimal_start = ((OPTIMAL_TEMP_RANGE[0] - 30) / (90 - 30)) * 100
+    temp_optimal_width = ((OPTIMAL_TEMP_RANGE[1] - OPTIMAL_TEMP_RANGE[0]) / (90 - 30)) * 100
     
-    # Pressure Gauge with optimal range indicator
-    pressure_percent = max(0, min(100, (sim_pressure - 20) / (45 - 20) * 100))
-    pressure_color = "#3CB371" if OPTIMAL_PRESSURE_RANGE[0] <= sim_pressure <= OPTIMAL_PRESSURE_RANGE[1] else "#FFA500"
-    pressure_color = "#FF4500" if sim_pressure < WEAR_THRESHOLD_PRESSURE else pressure_color
+    # PRESSURE GAUGE (FIXED)
+    pressure_percent = max(0, min(100, (sim_pressure - 25) / (40 - 25) * 100))
+    if OPTIMAL_PRESSURE_RANGE[0] <= sim_pressure <= OPTIMAL_PRESSURE_RANGE[1]:
+        pressure_color = "#3CB371"  # Green - optimal
+    elif sim_pressure < WEAR_THRESHOLD_PRESSURE or sim_pressure > OVERPRESSURE_THRESHOLD:
+        pressure_color = "#FF4500"  # Red - critical
+    else:
+        pressure_color = "#FFA500"  # Orange - warning
     
     st.markdown(f"**PRESSURE:** **{sim_pressure}** PSI")
     st.markdown(f"""
-    <div class="gauge-container" style="position: relative;">
+    <div class="gauge-container">
         <div class="gauge-optimal-range" style="left: {pressure_optimal_start}%; width: {pressure_optimal_width}%;"></div>
-        <div style="background: linear-gradient(90deg, {pressure_color} {pressure_percent}%, transparent {pressure_percent}%); 
-                    height: 15px; border-radius: 6px; border: 1px solid #000080; position: relative; z-index: 2;"></div>
+        <div class="gauge-fill" style="background: linear-gradient(90deg, {pressure_color} {pressure_percent}%, transparent {pressure_percent}%);"></div>
     </div>
     """, unsafe_allow_html=True)
-    st.caption(f"Optimal: {OPTIMAL_PRESSURE_RANGE[0]}-{OPTIMAL_PRESSURE_RANGE[1]} PSI")
     
-    # Temperature Gauge with optimal range indicator
-    temp_percent = max(0, min(100, (sim_temp - 20) / (100 - 20) * 100))
-    temp_color = "#3CB371" if OPTIMAL_TEMP_RANGE[0] <= sim_temp <= OPTIMAL_TEMP_RANGE[1] else "#FFA500"
-    temp_color = "#FF4500" if sim_temp > CRITICAL_TEMP_THRESHOLD else temp_color
+    if sim_pressure < WEAR_THRESHOLD_PRESSURE:
+        st.caption(f"❌ CRITICAL: Under-inflation (<{WEAR_THRESHOLD_PRESSURE} PSI)")
+    elif sim_pressure > OVERPRESSURE_THRESHOLD:
+        st.caption(f"❌ CRITICAL: Over-inflation risk (>{OVERPRESSURE_THRESHOLD} PSI)")
+    else:
+        st.caption(f"✅ Optimal: {OPTIMAL_PRESSURE_RANGE[0]}-{OPTIMAL_PRESSURE_RANGE[1]} PSI")
+    
+    # TEMPERATURE GAUGE (FIXED)
+    temp_percent = max(0, min(100, (sim_temp - 30) / (90 - 30) * 100))
+    if OPTIMAL_TEMP_RANGE[0] <= sim_temp <= OPTIMAL_TEMP_RANGE[1]:
+        temp_color = "#3CB371"  # Green - optimal
+    elif sim_temp > CRITICAL_TEMP_THRESHOLD:
+        temp_color = "#FF4500"  # Red - critical
+    else:
+        temp_color = "#FFA500"  # Orange - warning
     
     st.markdown(f"**TEMPERATURE:** **{sim_temp}**°C")
     st.markdown(f"""
-    <div class="gauge-container" style="position: relative;">
+    <div class="gauge-container">
         <div class="gauge-optimal-range" style="left: {temp_optimal_start}%; width: {temp_optimal_width}%;"></div>
-        <div style="background: linear-gradient(90deg, {temp_color} {temp_percent}%, transparent {temp_percent}%); 
-                    height: 15px; border-radius: 6px; border: 1px solid #000080; position: relative; z-index: 2;"></div>
+        <div class="gauge-fill" style="background: linear-gradient(90deg, {temp_color} {temp_percent}%, transparent {temp_percent}%);"></div>
     </div>
     """, unsafe_allow_html=True)
-    st.caption(f"Optimal: {OPTIMAL_TEMP_RANGE[0]}-{OPTIMAL_TEMP_RANGE[1]}°C")
     
-    # Mileage Gauge
+    if sim_temp > CRITICAL_TEMP_THRESHOLD:
+        st.caption(f"❌ CRITICAL: Rubber degradation risk (>85°C)")
+    else:
+        st.caption(f"✅ Optimal: {OPTIMAL_TEMP_RANGE[0]}-{OPTIMAL_TEMP_RANGE[1]}°C")
+    
+    # MILEAGE GAUGE
     mileage_percent = max(0, min(100, sim_mileage / 50000 * 100))
-    mileage_color = "#3CB371" if sim_mileage < MILEAGE_ALERT_THRESHOLD else "#FFA500"
-    mileage_color = "#FF4500" if sim_mileage > HIGH_MILEAGE_THRESHOLD else mileage_color
+    if sim_mileage < MILEAGE_ALERT_THRESHOLD:
+        mileage_color = "#3CB371"  # Green - good
+    elif sim_mileage < HIGH_MILEAGE_THRESHOLD:
+        mileage_color = "#FFA500"  # Orange - warning
+    else:
+        mileage_color = "#FF4500"  # Red - critical
     
-    st.markdown(f"**MILEAGE:** **{sim_mileage}** km")
+    st.markdown(f"**MILEAGE:** **{sim_mileage:,}** km")
     st.markdown(f"""
     <div class="gauge-container">
-        <div style="background: linear-gradient(90deg, {mileage_color} {mileage_percent}%, #BBBBBB {mileage_percent}%); 
-                    height: 15px; border-radius: 6px; border: 1px solid #000080;"></div>
+        <div class="gauge-fill" style="background: linear-gradient(90deg, {mileage_color} {mileage_percent}%, #BBBBBB {mileage_percent}%);"></div>
     </div>
     """, unsafe_allow_html=True)
-    st.caption(f"Alert at: {MILEAGE_ALERT_THRESHOLD:,} km")
+    
+    if sim_mileage > HIGH_MILEAGE_THRESHOLD:
+        st.caption(f"❌ CRITICAL: End of service life (>40,000 km)")
+    elif sim_mileage > MILEAGE_ALERT_THRESHOLD:
+        st.caption(f"⚠️ Warning: High mileage (>35,000 km)")
+    else:
+        st.caption(f"✅ Good: Within service life")
 
 # --- COLUMN 3: PRESCRIPTIVE ANALYTICS & QUICK METRICS ---
 with main_col3:
@@ -439,22 +483,28 @@ with main_col3:
     
     st.markdown('<div class="cyber-divider"></div>', unsafe_allow_html=True)
     
-    # Realistic Performance Metrics
+    # REALISTIC Performance Metrics
     st.markdown("### PERFORMANCE METRICS")
     col_a, col_b = st.columns(2)
     with col_a:
-        uptime_delta = f"{business_metrics['uptime'] - 97.5:+.1f}%" if business_metrics['uptime'] != 97.5 else "0.0%"
-        st.metric("Uptime", f"{business_metrics['uptime']}%", uptime_delta)
+        uptime_delta = f"{business_metrics['uptime'] - 98.2:+.1f}%" if business_metrics['uptime'] != 98.2 else "0.0%"
+        st.metric("Uptime", f"{business_metrics['uptime']}%", uptime_delta,
+                 help="Equipment availability percentage")
         
         fuel_delta = f"{business_metrics['fuel_efficiency']:+.1f}%"
-        st.metric("Fuel Efficiency", f"{business_metrics['fuel_efficiency']}%", fuel_delta)
+        fuel_color = "normal" if business_metrics['fuel_efficiency'] >= 0 else "inverse"
+        st.metric("Fuel Efficiency", f"{business_metrics['fuel_efficiency']}%", fuel_delta, delta_color=fuel_color,
+                 help="Impact on fuel consumption vs optimal conditions")
         
     with col_b:
-        st.metric("Cost Avoided", f"${business_metrics['maintenance_savings']:,}", 
-                 f"+{business_metrics['maintenance_savings']/BASE_MAINTENANCE_COST*100:.0f}%")
+        savings_percent = (business_metrics['maintenance_savings'] / 1800 * 100) - 100
+        st.metric("Cost Avoided", f"${business_metrics['maintenance_savings']:,}", f"+{savings_percent:.0f}%",
+                 help="Maintenance cost savings through predictive maintenance")
         
         risk_delta = f"{business_metrics['risk_score'] - 50:+.0f}" if business_metrics['risk_score'] != 50 else "0"
-        st.metric("Risk Score", f"{business_metrics['risk_score']}/100", risk_delta)
+        risk_color = "inverse" if business_metrics['risk_score'] > 50 else "normal"
+        st.metric("Risk Score", f"{business_metrics['risk_score']}/100", risk_delta, delta_color=risk_color,
+                 help="Overall asset risk assessment (lower is better)")
 
 # --- 5. BOTTOM SECTION: COMPACT TREND & ROI (Full Width) ---
 st.markdown('<div class="cyber-divider"></div>', unsafe_allow_html=True)
@@ -496,6 +546,15 @@ with trend_col1:
     )
     
     fig.add_hline(
+        y=OVERPRESSURE_THRESHOLD, 
+        line_dash="dot", 
+        line_color="#FF4500",
+        annotation_text="OVER-PRESSURE RISK",
+        annotation_font_color="#FF4500",
+        secondary_y=False
+    )
+    
+    fig.add_hline(
         y=CRITICAL_TEMP_THRESHOLD, 
         line_dash="dash", 
         line_color="#FF4500",
@@ -521,11 +580,11 @@ with trend_col1:
     # Apply y-axis settings
     fig.update_yaxes(
         title_text="Pressure (PSI)", title_font=dict(color="#000080"), tickfont=dict(color="#000080"), 
-        gridcolor='#E0E0E0', secondary_y=False 
+        gridcolor='#E0E0E0', range=[20, 45], secondary_y=False 
     )
     fig.update_yaxes(
         title_text="Temperature (°C)", title_font=dict(color="#800080"), tickfont=dict(color="#800080"),
-        gridcolor='#E0E0E0', showgrid=False, secondary_y=True 
+        gridcolor='#E0E0E0', showgrid=False, range=[20, 100], secondary_y=True 
     )
     
     st.plotly_chart(fig, use_container_width=True)
@@ -534,13 +593,13 @@ with trend_col2:
     st.markdown("### STRATEGIC ROI")
     st.markdown("""
     <div style="background: #FFFFFF; border-radius: 10px; padding: 15px; border: 1px solid #000080; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
-    <h4 style="color: #3CB371; margin: 0;">📈 20-25%</h4>
-    <p style="margin: 5px 0 10px 0; font-size: 0.8em; color: #111111;">Reduction in Downtime</p>
+    <h4 style="color: #3CB371; margin: 0;">📈 15-25%</h4>
+    <p style="margin: 5px 0 10px 0; font-size: 0.8em; color: #111111;">Uptime Improvement</p>
     
-    <h4 style="color: #3CB371; margin: 0;">💰 15-20%</h4>
-    <p style="margin: 5px 0 10px 0; font-size: 0.8em; color: #111111;">Maintenance Cost Savings</p>
+    <h4 style="color: #3CB371; margin: 0;">💰 $1,800-4,800</h4>
+    <p style="margin: 5px 0 10px 0; font-size: 0.8em; color: #111111;">Cost Avoidance per Asset</p>
 
-    <h4 style="color: #3CB371; margin: 0;">⛽ 3-8%</h4>
+    <h4 style="color: #3CB371; margin: 0;">⛽ 2-5%</h4>
     <p style="margin: 5px 0 10px 0; font-size: 0.8em; color: #111111;">Fuel Efficiency Gain</p>
     
     <h4 style="color: #3CB371; margin: 0;">🛡️ 72h</h4>
