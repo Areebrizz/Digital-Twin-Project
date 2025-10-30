@@ -204,8 +204,9 @@ with main_col1:
     }
     
     twin_glow = glow_colors.get(status_color, "rgba(0, 0, 128, 0.6)")
-    # ---!!! REPLACE THIS PLACEHOLDER URL WITH YOUR GLB RAW GITHUB URL !!!---
-    model_path = "https://cdn.jsdelivr.net/gh/google/model-viewer/examples/assets/RobotExpressive.glb" 
+    
+    # --- FIX 1: Using a known stable 3D tire model URL ---
+    model_path = "https://modelviewer.dev/assets/tire.glb" 
 
     html_code = f"""
     <div class="digital-twin-container" style="box-shadow: 0 0 10px 3px {twin_glow};">
@@ -342,7 +343,8 @@ with trend_col1:
         annotation_font_color="#FF4500"
     )
     
-    # --- FINAL STABLE PLOTLY LAYOUT: DEFINES BOTH AXES SIMULTANEOUSLY ---
+    # --- FIX 2: FINAL STABLE PLOTLY LAYOUT ---
+    # Defines layout and both axes simultaneously in the most stable format
     fig.update_layout(
         height=250, 
         margin=dict(l=20, r=50, t=30, b=20),
@@ -354,7 +356,6 @@ with trend_col1:
             orientation="h",
             yanchor="bottom", y=1.02, xanchor="right", x=1
         ),
-        # X-axis definition
         xaxis=dict(gridcolor='#E0E0E0', title="Mileage (km)"),
         
         # Primary Y-axis (for Pressure)
@@ -370,13 +371,13 @@ with trend_col1:
             title="Temperature (°C)", 
             titlefont=dict(color="#800080"), 
             tickfont=dict(color="#800080"),
-            overlaying='y', # CRUCIAL: Overlays y2 on y
+            overlaying='y', # Overlays y2 on y
             side='right', 
             gridcolor='#E0E0E0',
             showgrid=False 
         )
     )
-    # --- END FINAL STABLE PLOTLY LAYOUT ---
+    # --- END FIX 2 ---
     
     st.plotly_chart(fig, use_container_width=True)
 
