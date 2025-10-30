@@ -2,9 +2,10 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import plotly.graph_objects as go # Added for the scatter plot trace
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
-from streamlit_3d_viewer import st_3d_viewer # For 3D rendering
+from st_web_component import st_web_component # NEW 3D LIBRARY
 
 # --- 1. PAGE CONFIGURATION ---
 st.set_page_config(
@@ -14,7 +15,6 @@ st.set_page_config(
 )
 
 # --- 2. DATA GENERATION (Our "Excel File") ---
-# We generate and cache the data. This simulates loading a file.
 @st.cache_data
 def generate_data():
     """Generates a synthetic dataset for tire health monitoring."""
@@ -182,20 +182,36 @@ with tab2:
                         color='Failure Mode', title="3D View of Historical Failures")
     st.plotly_chart(fig2, use_container_width=True)
 
-# --- TAB 3: 3D TWIN VIEW ---
+# --- TAB 3: 3D TWIN VIEW (FIXED) ---
 with tab3:
-    st.header("Live 3D Digital Twin")
+    st.header("Live 3D Digital Twin Viewer")
     
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.subheader(f"3D Model: {prediction} Status")
+        st.subheader(f"3D Model Status: {prediction}")
         
-        # Find a public URL for a .glb file of a tire
-        # This one is from a Google example, so it's stable
-        tire_model_url = "https://storage.googleapis.com/blocks-wordpress/2021/03/wheel.glb"
+        # Using a public GLTF model from modelviewer.dev for guaranteed deployment compatibility
+        model_path = "https://modelviewer.dev/shared-assets/models/gltf/RobotExpressive.glb" 
+
+        # The HTML component uses the <model-viewer> web standard for 3D rendering
+        html_code = f"""
+        <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+        <model-viewer 
+            src="{model_path}"
+            alt="A 3D Model of the Digital Twin Tire"
+            auto-rotate 
+            camera-controls 
+            ar
+            style="width: 100%; height: 500px; --progress-bar-color: red;"
+            shadow-intensity="1"
+            >
+        </model-viewer>
+        """
         
-        st_3d_viewer(tire_model_url, height=500, key="viewer_3d")
+        # Embed the component
+        st_web_component(html_code, height=500, key="3d_viewer")
+
 
     with col2:
         st.subheader("Linked Data")
