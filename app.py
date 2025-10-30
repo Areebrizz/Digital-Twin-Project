@@ -338,10 +338,13 @@ with trend_col1:
         line_dash="dash", 
         line_color="#FF4500",
         annotation_text="CRITICAL PRESSURE",
+        annotation_position="top right", # Ensure annotation doesn't interfere
         annotation_font_color="#FF4500"
     )
     
-    # --- CORRECTED PLOTLY LAYOUT FOR STABILITY ---
+    # --- FINAL STABLE PLOTLY LAYOUT (Separating layout updates for stability) ---
+    
+    # 1. Update general layout properties
     fig.update_layout(
         height=250, 
         margin=dict(l=20, r=50, t=30, b=20),
@@ -353,25 +356,29 @@ with trend_col1:
             orientation="h",
             yanchor="bottom", y=1.02, xanchor="right", x=1
         ),
-        # Primary Y-axis definition
-        yaxis=dict(
-            title="Pressure (PSI)", 
-            titlefont=dict(color="#000080"), 
-            tickfont=dict(color="#000080"), 
-            gridcolor='#E0E0E0'
-        ),
-        # Secondary Y-axis definition
-        yaxis2=dict(
-            title="Temperature (°C)", 
-            titlefont=dict(color="#800080"), 
-            tickfont=dict(color="#800080"),
-            overlaying='y', 
-            side='right', 
-            gridcolor='#E0E0E0',
-            showgrid=False # Optional: Hide grid for secondary axis to avoid clutter
-        ),
         xaxis=dict(gridcolor='#E0E0E0')
     )
+    
+    # 2. Update Y-axes separately (more robust in some Streamlit environments)
+    fig.update_yaxes(
+        title="Pressure (PSI)", 
+        titlefont=dict(color="#000080"), 
+        tickfont=dict(color="#000080"), 
+        gridcolor='#E0E0E0',
+        row=1, col=1 # Explicitly set row/col for single subplot
+    )
+    
+    fig.update_yaxes(
+        title="Temperature (°C)", 
+        titlefont=dict(color="#800080"), 
+        tickfont=dict(color="#800080"),
+        overlaying='y', 
+        side='right', 
+        gridcolor='#E0E0E0',
+        showgrid=False,
+        row=1, col=1 # Explicitly set row/col for single subplot
+    )
+    # --- END FINAL STABLE PLOTLY LAYOUT ---
     
     st.plotly_chart(fig, use_container_width=True)
 
@@ -385,7 +392,7 @@ with trend_col2:
     <h4 style="color: #3CB371; margin: 0;">✅ 15% ASSET LIFE</h4>
     <p style="margin: 5px 0 10px 0; font-size: 0.8em; color: #111111;">Lifecycle Optimization</p>
 
-    <h4 style="color: #3CB371; margin: 0;">✅ 72h LEAD TIME</h4>
+    <h4 style="color: #3CB371; margin: 0;'>✅ 72h LEAD TIME</h4>
     <p style="margin: 5px 0; font-size: 0.8em; color: #111111;">Prescriptive Maintenance</p>
     </div>
     """, unsafe_allow_html=True)
