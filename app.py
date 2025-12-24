@@ -8,7 +8,7 @@ import random
 
 # --- CONFIGURATION: Full Screen, No Scroll ---
 st.set_page_config(
-    page_title="META 4.0 Digital Twin Command Center",
+    page_title="Digital Twin Prescriptive Maintenance Platform",
     page_icon="⚙️",
     layout="wide",
     initial_sidebar_state="collapsed"
