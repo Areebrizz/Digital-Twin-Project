@@ -300,7 +300,6 @@ header_col1, header_col2 = st.columns([3, 1])
 
 with header_col1:
     st.markdown("# 🚀 Digital Twin Prescriptive Maintenance Platform")
-    st.markdown("### Prescriptive Maintenance Intelligence Platform")
     
 # --- INTRO / CONTEXT SECTION (Sleek, direct, non-bolded text) ---
 st.markdown("""
